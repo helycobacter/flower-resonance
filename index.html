@@ -3,190 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flower DNA Resonance</title>
+    <title>Flower DNA</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #000; /* Глибокий чорний фон */
-            color: #fff;
-            font-family: 'Segoe UI', sans-serif;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 2; /* Квітка над фоном */
-        }
-
-        .ui-container {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            pointer-events: none;
-        }
-
-        #display {
-            font-size: 16px;
-            letter-spacing: 2px;
-            text-shadow: 0 0 15px rgba(255,255,255,0.5);
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        #startBtn {
-            padding: 15px 40px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            color: white;
-            cursor: pointer;
-            pointer-events: auto;
-            backdrop-filter: blur(10px);
-            border-radius: 50px;
-            transition: 0.4s;
-            text-transform: uppercase;
-            font-size: 14px;
-        }
-
-        #startBtn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
-        }
-
-        /* Стилі для туманності фону */
-        .aura {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            z-index: 1;
-            opacity: 0.6;
-            mix-blend-mode: screen;
-        }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 2; }
+        .aura { position: absolute; border-radius: 50%; filter: blur(60px); z-index: 1; opacity: 0.6; }
+        #ui { position: relative; z-index: 10; text-align: center; pointer-events: none; }
+        #startBtn { pointer-events: auto; padding: 15px 30px; background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; border-radius: 25px; cursor: pointer; text-transform: uppercase; }
+        #display { margin-bottom: 20px; font-size: 14px; letter-spacing: 1px; text-shadow: 0 0 10px #000; }
     </style>
 </head>
 <body>
-
-    <div class="ui-container">
-        <div id="display">АНАЛІЗ СИГНАЛУ...</div>
+    <div id="ui">
+        <div id="display">ІНІЦІАЛІЗАЦІЯ...</div>
         <button id="startBtn">Активувати Резонанс</button>
     </div>
-
-    <canvas id="flowerCanvas"></canvas>
+    <canvas id="cvs"></canvas>
 
     <script>
-        const canvas = document.getElementById('flowerCanvas');
+        const canvas = document.getElementById('cvs');
         const ctx = canvas.getContext('2d');
-        const display = document.getElementById('display');
-        const startBtn = document.getElementById('startBtn');
-
-        // 1. Отримання та очищення даних
         const params = new URLSearchParams(window.location.search);
+        
         const hue = parseInt(params.get('hue')) || 200;
         const petals = parseInt(params.get('petals')) || 8;
-        const ip = params.get('ip') || "0.0.0.0";
         const freq = parseInt(params.get('freq')) || 432;
-        const element = (params.get('element') || "water").toLowerCase().trim();
+        const element = (params.get('element') || "water").toLowerCase();
 
-        // 2. Налаштування стихій (ЯСКРАВІ КОЛЬОРИ)
         const styles = {
-            "fire":  { h: 10,  s: 100, l: 50, speed: 0.05, label: "ВОГОНЬ" },
-            "earth": { h: 120, s: 60,  l: 30, speed: 0.015, label: "ЗЕМЛЯ" },
-            "air":   { h: 190, s: 80,  l: 70, speed: 0.06, label: "ПОВІТРЯ" },
-            "water": { h: 220, s: 80,  l: 45, speed: 0.02, label: "ВОДА" }
+            fire:  { h: 15,  s: 100, l: 50, speed: 0.05, label: "ВОГОНЬ" },
+            earth: { h: 125, s: 60,  l: 35, speed: 0.015, label: "ЗЕМЛЯ" },
+            air:   { h: 195, s: 80,  l: 70, speed: 0.06, label: "ПОВІТРЯ" },
+            water: { h: 225, s: 80,  l: 45, speed: 0.02, label: "ВОДА" }
         };
-
-        const config = styles[element] || styles.water;
-
-        // Оновлюємо UI
-        display.innerText = `IP: ${ip} | ELEMENT: ${config.label}`;
+        const stl = styles[element] || styles.water;
+        document.getElementById('display').innerText = `IP: ${params.get('ip')} | ${stl.label}`;
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // 3. Функція фонової аури (щоб не було чорного екрану)
         function createAura() {
             for (let i = 0; i < 5; i++) {
-                const aura = document.createElement('div');
-                aura.className = 'aura';
-                const size = 600 + Math.random() * 400;
-                aura.style.width = aura.style.height = `${size}px`;
-                aura.style.left = (Math.random() * 100 - 20) + '%';
-                aura.style.top = (Math.random() * 100 - 20) + '%';
-                aura.style.background = `radial-gradient(circle, hsla(${config.h}, ${config.s}%, ${config.l}%, 0.5) 0%, transparent 70%)`;
-                document.body.appendChild(aura);
+                const a = document.createElement('div');
+                a.className = 'aura';
+                const s = 400 + Math.random() * 500;
+                a.style.width = a.style.height = s + 'px';
+                a.style.left = (Math.random() * 100 - 20) + '%';
+                a.style.top = (Math.random() * 100 - 20) + '%';
+                a.style.background = `radial-gradient(circle, hsla(${stl.h},${stl.s}%,${stl.l}%,0.6) 0%, transparent 70%)`;
+                document.body.appendChild(a);
             }
         }
 
-        let time = 0;
-
-        function animate() {
-            // Малюємо напівпрозорий фон для ефекту шлейфу
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-
+        let t = 0;
+        function draw() {
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fillRect(0,0,canvas.width, canvas.height);
             ctx.save();
-            ctx.translate(cx, cy);
-
-            for (let i = 0; i < petals; i++) {
-                ctx.rotate((Math.PI * 2) / petals);
-                
+            ctx.translate(canvas.width/2, canvas.height/2);
+            for(let i=0; i<petals; i++) {
+                ctx.rotate((Math.PI*2)/petals);
                 ctx.beginPath();
-                const len = 160 + Math.sin(time * 2 + i) * 40; // Пульсація
-                
-                const grad = ctx.createLinearGradient(0, 0, 0, len);
-                grad.addColorStop(0, `hsla(${hue}, 100%, 70%, 0)`);
-                grad.addColorStop(0.5, `hsla(${hue}, 100%, 75%, 0.9)`);
-                grad.addColorStop(1, `hsla(${hue}, 100%, 70%, 0)`);
-
-                ctx.strokeStyle = grad;
-                ctx.lineWidth = 4; // Товстіші лінії
-                ctx.lineCap = 'round';
-                ctx.moveTo(0, 0);
-                ctx.quadraticCurveTo(50, len / 2, 0, len);
-                ctx.stroke();
+                let l = 160 + Math.sin(t*2+i)*40;
+                let g = ctx.createLinearGradient(0,0,0,l);
+                g.addColorStop(0, `hsla(${hue},100%,70%,0)`);
+                g.addColorStop(0.5, `hsla(${hue},100%,75%,0.9)`);
+                g.addColorStop(1, `hsla(${hue},100%,70%,0)`);
+                ctx.strokeStyle = g; ctx.lineWidth = 4; ctx.moveTo(0,0);
+                ctx.quadraticCurveTo(50, l/2, 0, l); ctx.stroke();
             }
-
-            ctx.restore();
-            time += config.speed;
-            requestAnimationFrame(animate);
+            ctx.restore(); t += stl.speed; requestAnimationFrame(draw);
         }
 
-        function playSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 1);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-            } catch(e) {}
-        }
+        document.getElementById('startBtn').onclick = () => {
+            const ac = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ac.createOscillator();
+            const g = ac.createGain();
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0, ac.currentTime);
+            g.gain.linearRampToValueAtTime(0.2, ac.currentTime + 2);
+            o.connect(g); g.connect(ac.destination);
+            o.start();
+            document.getElementById('startBtn').style.display = 'none';
+        };
 
-        startBtn.addEventListener('click', () => {
-            playSound();
-            startBtn.style.display = 'none';
-        });
-
-        createAura();
-        animate();
-
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
+        createAura(); draw();
     </script>
 </body>
 </html>
