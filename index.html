@@ -111,7 +111,7 @@
     const petalsCount = parseInt(urlParams.get('petals')) || 8;
     const ip = urlParams.get('ip') || "0.0.0.0";
     const resonanceFreq = parseInt(urlParams.get('freq')) || 432;
-    const element = urlParams.get('element') || "water";
+    const element = (urlParams.get('element') || "water").toLowerCase();
 
     // 2. Оновлення тексту (пробуємо обидва можливі ID для страховки)
     const uiDisplay = document.getElementById('display') || document.getElementById('ipDisplay');
