@@ -4,19 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        canvas { position: absolute; top: 0; left: 0; z-index: 2; }
-        #ui { position: relative; z-index: 10; text-align: center; pointer-events: none; }
-        #startBtn { pointer-events: auto; padding: 15px 35px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.4); color: #fff; border-radius: 30px; cursor: pointer; backdrop-filter: blur(5px); }
-        #display { margin-bottom: 20px; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.8; }
-        .star { position: absolute; background: #fff; border-radius: 50%; opacity: 0.5; z-index: 0; animation: twinkle var(--d) infinite; }
-        @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.8; } }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; height: 100vh; }
+        #ui { position: absolute; width: 100%; top: 20px; z-index: 10; text-align: center; pointer-events: none; }
+        #startBtn { pointer-events: auto; padding: 12px 25px; background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; border-radius: 20px; cursor: pointer; margin-top: 10px; }
+        canvas { display: block; }
     </style>
 </head>
 <body>
     <div id="ui">
-        <div id="display">Connecting to Info-Field...</div>
-        <button id="startBtn">Reveal Resonance</button>
+        <div id="display">RESONANCE ACTIVE</div>
+        <button id="startBtn">УВІМКНУТИ ЗВУК</button>
     </div>
     <canvas id="canvas"></canvas>
 
@@ -31,44 +28,53 @@
         const element = (params.get('element') || "water").toLowerCase();
 
         const styles = {
-            fire:  { h: 10,  s: 100, l: 30, speed: 0.04, label: "FIRE" },
-            earth: { h: 120, s: 50,  l: 25, speed: 0.01, label: "EARTH" },
-            air:   { h: 190, s: 70,  l: 50, speed: 0.05, label: "AIR" },
-            water: { h: 210, s: 60,  l: 40, speed: 0.02, label: "WATER" }
+            fire:  { h: 10,  s: 100, l: 40, speed: 0.04 },
+            earth: { h: 120, s: 50,  l: 30, speed: 0.015 },
+            air:   { h: 190, s: 70,  l: 60, speed: 0.05 },
+            water: { h: 220, s: 60,  l: 40, speed: 0.02 }
         };
         const stl = styles[element] || styles.water;
-
-        // Встановлюємо фон та створюємо зірки
-        document.body.style.background = `radial-gradient(circle at center, hsla(${stl.h}, ${stl.s}%, 15%, 1) 0%, #000 90%)`;
-        for(let i=0; i<70; i++) {
-            const s = document.createElement('div');
-            s.className = 'star';
-            s.style.width = s.style.height = Math.random()*3+'px';
-            s.style.left = Math.random()*100+'%';
-            s.style.top = Math.random()*100+'%';
-            s.style.setProperty('--d', 2+Math.random()*4+'s');
-            document.body.appendChild(s);
-        }
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
+        // Генерація статичних зірок
+        const stars = [];
+        for(let i=0; i<100; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2,
+                o: Math.random()
+            });
+        }
+
         let t = 0;
         function draw() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            // 1. Малюємо фон та ауру
+            const grd = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 10, canvas.width/2, canvas.height/2, canvas.width*0.6);
+            grd.addColorStop(0, `hsla(${stl.h}, ${stl.s}%, 15%, 1)`);
+            grd.addColorStop(1, "#000");
+            ctx.fillStyle = grd;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
+            // 2. Малюємо зірки
+            ctx.fillStyle = "#fff";
+            stars.forEach(s => {
+                ctx.globalAlpha = s.o + Math.sin(t + s.x) * 0.3;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+
+            // 3. Малюємо квітку
             ctx.save();
             ctx.translate(canvas.width/2, canvas.height/2);
-            
             for(let i=0; i < petals; i++) {
                 ctx.rotate((Math.PI * 2) / petals);
                 ctx.beginPath();
-                
-                // ПАРАМЕТРИ КВІТКИ (НЕ ЗІРКИ)
-                let len = 180 + Math.sin(t * 2 + i) * 30;
-                let cp1x = 60; // Вигин пелюстки
-                let cp1y = len / 2;
+                let len = 160 + Math.sin(t * 2 + i) * 30;
                 
                 const g = ctx.createLinearGradient(0, 0, 0, len);
                 g.addColorStop(0, `hsla(${hue}, 100%, 70%, 0)`);
@@ -77,35 +83,29 @@
 
                 ctx.strokeStyle = g;
                 ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
                 
-                // Малюємо пелюстку як вигнуту лінію
+                // Форма пелюстки (не зірка)
                 ctx.moveTo(0, 0);
-                ctx.quadraticCurveTo(cp1x, cp1y, 0, len);
-                // Малюємо симетричну сторону пелюстки для об'єму
-                ctx.quadraticCurveTo(-cp1x, cp1y, 0, 0);
-                
+                ctx.quadraticCurveTo(50, len/2, 0, len);
+                ctx.quadraticCurveTo(-50, len/2, 0, 0);
                 ctx.stroke();
             }
             ctx.restore();
+
             t += stl.speed;
             requestAnimationFrame(draw);
         }
 
-        document.getElementById('display').innerText = `DNA Resonance: ${stl.label}`;
-
         document.getElementById('startBtn').onclick = () => {
+            const ac = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ac.createOscillator();
+            const g = ac.createGain();
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0, ac.currentTime);
+            g.gain.linearRampToValueAtTime(0.1, ac.currentTime + 1);
+            o.connect(g); g.connect(ac.destination);
+            o.start();
             document.getElementById('startBtn').style.display = 'none';
-            try {
-                const ac = new (window.AudioContext || window.webkitAudioContext)();
-                const o = ac.createOscillator();
-                const g = ac.createGain();
-                o.frequency.value = freq;
-                g.gain.setValueAtTime(0, ac.currentTime);
-                g.gain.linearRampToValueAtTime(0.2, ac.currentTime + 1);
-                o.connect(g); g.connect(ac.destination);
-                o.start();
-            } catch(e) {}
         };
 
         draw();
