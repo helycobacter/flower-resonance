@@ -105,20 +105,13 @@
     const ctx = canvas.getContext('2d');
     const startBtn = document.getElementById('startBtn');
     
-    // 1. Отримуємо параметри з посилання
+    // Отримання параметрів з бота
     const urlParams = new URLSearchParams(window.location.search);
-    
     const hue = parseInt(urlParams.get('hue')) || 280;
     const petalsCount = parseInt(urlParams.get('petals')) || 8;
     const ip = urlParams.get('ip') || "0.0.0.0";
     const resonanceFreq = parseInt(urlParams.get('freq')) || 432;
     const element = urlParams.get('element') || "water";
-
-    // 2. ВАЖЛИВО: Оновлюємо текст відразу після отримання даних
-    const displayElement = document.getElementById('display');
-    if (displayElement) {
-        displayElement.innerText = `IP: ${ip} | ELEMENT: ${element.toUpperCase()}`;
-    }
 
     document.getElementById('display').innerText = `IP: ${ip} | ELEMENT: ${element.toUpperCase()}`;
 
@@ -184,4 +177,43 @@
 
             ctx.strokeStyle = grad;
             ctx.lineWidth = 2;
-            ctx.moveTo(0
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(30, len / 2, 0, len);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+        time += style.speed; // Швидкість пульсації залежить від стихії
+        requestAnimationFrame(draw);
+    }
+
+    function playTone() {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.frequency.setValueAtTime(resonanceFreq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 2);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+    }
+
+    startBtn.addEventListener('click', () => {
+        isStarted = true;
+        playTone();
+        startBtn.style.display = 'none';
+    });
+
+    initCosmos();
+    draw();
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+</body>
+</html>
