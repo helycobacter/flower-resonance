@@ -4,20 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; height: 100vh; }
-        #ui { position: absolute; width: 100%; top: 20px; z-index: 10; text-align: center; pointer-events: none; }
-        #startBtn { pointer-events: auto; padding: 12px 25px; background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; border-radius: 20px; cursor: pointer; margin-top: 10px; }
-        canvas { display: block; }
+        body { margin: 0; background: #000; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        canvas { position: absolute; top: 0; left: 0; }
+        #ui { position: absolute; z-index: 10; bottom: 30px; text-align: center; width: 100%; pointer-events: none; }
+        #startBtn { pointer-events: auto; padding: 12px 30px; background: none; border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 30px; cursor: pointer; backdrop-filter: blur(5px); font-family: sans-serif; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <div id="display">RESONANCE ACTIVE</div>
-        <button id="startBtn">УВІМКНУТИ ЗВУК</button>
-    </div>
+    <div id="ui"><button id="startBtn">ACTIVATE RESONANCE</button></div>
     <canvas id="canvas"></canvas>
 
-   <script>
+    <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const params = new URLSearchParams(window.location.search);
@@ -28,162 +25,101 @@
         const element = (params.get('element') || "water").toLowerCase();
 
         const styles = {
-            fire:  { h: 10,  s: 100, l: 40, speed: 0.04 },
-            earth: { h: 120, s: 50,  l: 30, speed: 0.015 },
-            air:   { h: 190, s: 70,  l: 60, speed: 0.05 },
-            water: { h: 220, s: 60,  l: 40, speed: 0.02 }
+            fire:  { h: 10,  s: 100, l: 40, speed: 0.03 },
+            earth: { h: 125, s: 50,  l: 30, speed: 0.01 },
+            air:   { h: 195, s: 70,  l: 60, speed: 0.04 },
+            water: { h: 225, s: 60,  l: 40, speed: 0.015 }
         };
         const stl = styles[element] || styles.water;
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        const stars = [];
-        for(let i=0; i<100; i++) {
-            stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, o: Math.random() });
+        let w, h;
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
         }
+        window.addEventListener('resize', resize);
+        resize();
 
         let t = 0;
 
-        // --- ФРАКТАЛЬНА ФУНКЦІЯ МАЛЮВАННЯ ---
-        function drawFractalPetal(x, y, length, angle, depth) {
-            if (depth <= 0) return;
-
+        function drawPetal(len, width, angle, color, alpha) {
             ctx.save();
-            ctx.translate(x, y);
             ctx.rotate(angle);
-
-            // Градієнт залежить від глибини рекурсії
-            const g = ctx.createLinearGradient(0, 0, 0, length);
-            g.addColorStop(0, `hsla(${hue}, 100%, ${70 - depth*10}%, 0)`);
-            g.addColorStop(0.5, `hsla(${hue + depth*10}, 100%, 75%, ${0.8/depth})`);
-            g.addColorStop(1, `hsla(${hue}, 100%, 70%, 0)`);
-
-            ctx.strokeStyle = g;
-            ctx.lineWidth = 1.5;
-
-            // Малюємо основну дугу пелюстки
             ctx.beginPath();
+            
+            // Ефект світіння
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = color;
+            ctx.globalAlpha = alpha;
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            // Малюємо форму пелюстки через дві криві Безьє
             ctx.moveTo(0, 0);
-            ctx.quadraticCurveTo(30 * depth, length / 2, 0, length);
+            ctx.bezierCurveTo(width, len/3, width, len*2/3, 0, len);
+            ctx.bezierCurveTo(-width, len*2/3, -width, len/3, 0, 0);
+            
             ctx.stroke();
-
-            // Рекурсивний виклик: створюємо менші пелюстки по боках
-            const nextLen = length * 0.7;
-            drawFractalPetal(0, length / 2, nextLen, 0.4 + Math.sin(t)*0.1, depth - 1);
-            drawFractalPetal(0, length / 2, nextLen, -0.4 - Math.sin(t)*0.1, depth - 1);
-
+            
+            // Додаємо внутрішню "жилку" пелюстки
+            ctx.beginPath();
+            ctx.lineWidth = 1;
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, len * 0.8);
+            ctx.stroke();
+            
             ctx.restore();
         }
 
         function draw() {
-            // Фон з градієнтом
-            const grd = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 10, canvas.width/2, canvas.height/2, canvas.width*0.7);
-            grd.addColorStop(0, `hsla(${stl.h}, ${stl.s}%, 12%, 1)`);
+            // Фон з глибокою аурою
+            const grd = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w*0.8);
+            grd.addColorStop(0, `hsla(${stl.h}, ${stl.s}%, 10%, 1)`);
             grd.addColorStop(1, "#000");
             ctx.fillStyle = grd;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Зірки
-            ctx.fillStyle = "#fff";
-            stars.forEach(s => {
-                ctx.globalAlpha = s.o + Math.sin(t + s.x) * 0.2;
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
-            });
-            ctx.globalAlpha = 1;
+            ctx.fillRect(0, 0, w, h);
 
             ctx.save();
-            ctx.translate(canvas.width/2, canvas.height/2);
-            ctx.rotate(t * 0.1); // Повільне обертання всієї квітки
+            ctx.translate(w/2, h/2);
+            
+            // Плавне хитання всієї квітки
+            ctx.translate(Math.cos(t*0.5)*10, Math.sin(t*0.5)*10);
+            ctx.rotate(t * 0.1);
 
-            for(let i=0; i < petals; i++) {
-                // Малюємо кожну основну пелюстку як дерево фракталів
-                drawFractalPetal(0, 0, 150 + Math.sin(t)*20, (Math.PI * 2 / petals) * i, 4);
+            // Малюємо 3 шари пелюсток для об'єму
+            for (let layer = 0; layer < 3; layer++) {
+                const layerScale = 1 - layer * 0.2;
+                const layerAlpha = 0.8 - layer * 0.2;
+                const layerLen = (180 + Math.sin(t + layer) * 20) * layerScale;
+                const layerWidth = 60 * layerScale;
+
+                for (let i = 0; i < petals; i++) {
+                    const angle = (Math.PI * 2 / petals) * i + (layer * 0.2);
+                    const petalHue = (hue + layer * 15) % 360;
+                    drawPetal(layerLen, layerWidth, angle, `hsla(${petalHue}, 100%, 75%, 1)`, layerAlpha);
+                }
             }
+
             ctx.restore();
 
             t += stl.speed;
             requestAnimationFrame(draw);
         }
 
-        document.getElementById('startBtn').onclick = () => {
+        document.getElementById('startBtn').onclick = (e) => {
+            e.target.style.display = 'none';
             const ac = new (window.AudioContext || window.webkitAudioContext)();
             const o = ac.createOscillator();
             const g = ac.createGain();
             o.frequency.value = freq;
             g.gain.setValueAtTime(0, ac.currentTime);
-            g.gain.linearRampToValueAtTime(0.1, ac.currentTime + 1);
+            g.gain.linearRampToValueAtTime(0.1, ac.currentTime + 2);
             o.connect(g); g.connect(ac.destination);
             o.start();
-            document.getElementById('startBtn').style.display = 'none';
-        };
-
-        draw();
-    </script>
-
-        let t = 0;
-        function draw() {
-            // 1. Малюємо фон та ауру
-            const grd = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 10, canvas.width/2, canvas.height/2, canvas.width*0.6);
-            grd.addColorStop(0, `hsla(${stl.h}, ${stl.s}%, 15%, 1)`);
-            grd.addColorStop(1, "#000");
-            ctx.fillStyle = grd;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 2. Малюємо зірки
-            ctx.fillStyle = "#fff";
-            stars.forEach(s => {
-                ctx.globalAlpha = s.o + Math.sin(t + s.x) * 0.3;
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
-                ctx.fill();
-            });
-            ctx.globalAlpha = 1.0;
-
-            // 3. Малюємо квітку
-            ctx.save();
-            ctx.translate(canvas.width/2, canvas.height/2);
-            ctx.rotate(t * 0.2);
-            for(let i=0; i < petals; i++) {
-                ctx.rotate((Math.PI * 2) / petals);
-                ctx.beginPath();
-                let len = 160 + Math.sin(t * 2 + i) * 30;
-                
-                const g = ctx.createLinearGradient(0, 0, 0, len);
-                g.addColorStop(0, `hsla(${hue}, 100%, 70%, 0)`);
-                g.addColorStop(0.5, `hsla(${hue}, 100%, 75%, 0.8)`);
-                g.addColorStop(1, `hsla(${hue}, 100%, 70%, 0)`);
-
-                ctx.strokeStyle = g;
-                ctx.lineWidth = 3;
-                
-                // Форма пелюстки (не зірка)
-                ctx.moveTo(0, 0);
-                ctx.quadraticCurveTo(50, len/2, 0, len);
-                ctx.quadraticCurveTo(-50, len/2, 0, 0);
-                ctx.stroke();
-            }
-            ctx.restore();
-
-            t += stl.speed;
-            requestAnimationFrame(draw);
-        }
-
-        document.getElementById('startBtn').onclick = () => {
-            const ac = new (window.AudioContext || window.webkitAudioContext)();
-            const o = ac.createOscillator();
-            const g = ac.createGain();
-            o.frequency.value = freq;
-            g.gain.setValueAtTime(0, ac.currentTime);
-            g.gain.linearRampToValueAtTime(0.1, ac.currentTime + 1);
-            o.connect(g); g.connect(ac.destination);
-            o.start();
-            document.getElementById('startBtn').style.display = 'none';
         };
 
         draw();
     </script>
 </body>
 </html>
-
-
