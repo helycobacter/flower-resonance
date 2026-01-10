@@ -105,13 +105,20 @@
     const ctx = canvas.getContext('2d');
     const startBtn = document.getElementById('startBtn');
     
-    // Отримання параметрів з бота
+    // 1. Отримуємо параметри з посилання
     const urlParams = new URLSearchParams(window.location.search);
+    
     const hue = parseInt(urlParams.get('hue')) || 280;
     const petalsCount = parseInt(urlParams.get('petals')) || 8;
     const ip = urlParams.get('ip') || "0.0.0.0";
     const resonanceFreq = parseInt(urlParams.get('freq')) || 432;
     const element = urlParams.get('element') || "water";
+
+    // 2. ВАЖЛИВО: Оновлюємо текст відразу після отримання даних
+    const displayElement = document.getElementById('display');
+    if (displayElement) {
+        displayElement.innerText = `IP: ${ip} | ELEMENT: ${element.toUpperCase()}`;
+    }
 
     document.getElementById('display').innerText = `IP: ${ip} | ELEMENT: ${element.toUpperCase()}`;
 
