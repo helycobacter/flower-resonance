@@ -186,24 +186,37 @@
         const btn = document.getElementById('startBtn');
         btn.addEventListener('click', () => {
             btn.style.opacity = 0;
-            btn.style.pointerEvents = 'none'; // Блокуємо повторні натискання
+            btn.style.pointerEvents = 'none';
             
             try {
                 const ac = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ac.createOscillator();
-                const gn = ac.createGain();
-                
-                osc.frequency.value = freq;
-                osc.type = 'triangle'; // М'якший звук, ніж sine
-                
-                gn.gain.setValueAtTime(0, ac.currentTime);
-                gn.gain.linearRampToValueAtTime(0.15, ac.currentTime + 2);
-                
-                osc.connect(gn);
-                gn.connect(ac.destination);
-                osc.start();
-            } catch(e) {}
+                const masterGain = ac.createGain();
+                masterGain.gain.setValueAtTime(0, ac.currentTime);
+                masterGain.gain.linearRampToValueAtTime(0.15, ac.currentTime + 3);
+                masterGain.connect(ac.destination);
+
+                // Функція для створення гармоніки
+                const createOsc = (f, vol, type = 'sine') => {
+                    const o = ac.createOscillator();
+                    const g = ac.createGain();
+                    o.type = type;
+                    o.frequency.value = f;
+                    g.gain.value = vol;
+                    o.connect(g);
+                    g.connect(masterGain);
+                    o.start();
+                };
+
+                // Основний тон (Фундамент)
+                createOsc(freq, 0.6, 'triangle'); 
+                // Октава (Світло)
+                createOsc(freq * 2, 0.3, 'sine');
+                // Квінта (Гармонія)
+                createOsc(freq * 1.5, 0.2, 'sine');
+
+            } catch(e) { console.error(e); }
         });
     </script>
 </body>
 </html>
+
