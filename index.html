@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal IP Resonance</title>
+    <style>
+        body {
+            margin: 0;
+            background: radial-gradient(circle, #0a0a1a 0%, #000000 100%);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            display: block;
+            filter: drop-shadow(0 0 20px rgba(100, 100, 255, 0.2));
+        }
+        #ui {
+            position: absolute;
+            bottom: 10%;
+            text-align: center;
+            pointer-events: none;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        .vibration-text {
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+        button {
+            position: absolute;
+            z-index: 10;
+            padding: 15px 30px;
+            background: none;
+            border: 1px solid #ffffff55;
+            color: white;
+            cursor: pointer;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="startBtn">Активувати Резонанс</button>
+
+    <div id="ui">
+        <div id="ipDisplay" class="vibration-text">Connecting to Universe IP...</div>
+    </div>
+
+    <canvas id="flowerCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('flowerCanvas');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('startBtn');
+    
+    // Отримуємо параметри з URL (які передасть бот)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hue = parseInt(urlParams.get('hue')) || 280; // Фіолетовий за замовчуванням
+    const petalsCount = parseInt(urlParams.get('petals')) || 12;
+    const ip = urlParams.get('ip') || "0.0.0.0";
+    const resonanceFreq = parseInt(urlParams.get('freq')) || 528;
+
+    document.getElementById('ipDisplay').innerText = `IP: ${ip} | Resonance: ${resonanceFreq}Hz`;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let time = 0;
+    let growth = 0;
+    let isStarted = false;
+
+    // Малювання сакральної геометрії
+    function drawFlower() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        
+        if (isStarted && growth < 1) growth += 0.005;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+
+        // Малюємо 3 рівні пелюсток (фрактальність)
+        for (let j = 1; j <= 3; j++) {
+            let layerSpeed = time * (0.5 / j);
+            let layerHue = (hue + j * 20) % 360;
+
+            for (let i = 0; i < petalsCount; i++) {
+                ctx.save();
+                ctx.rotate((Math.PI * 2 / petalsCount) * i + layerSpeed * 0.1);
+                
+                const pulse = Math.sin(time * 2) * 10;
+                const size = (100 * j * growth) + pulse;
+
+                // Пелюстка у вигляді світлового променя
+                const grad = ctx.createLinearGradient(0, 0, 0, size);
+                grad.addColorStop(0, `hsla(${layerHue}, 80%, 70%, 0)`);
+                grad.addColorStop(0.5, `hsla(${layerHue}, 90%, 60%, ${0.4 / j})`);
+                grad.addColorStop(1, `hsla(${layerHue}, 100%, 50%, 0)`);
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(30 * growth, size / 2, 0, size);
+                ctx.quadraticCurveTo(-30 * growth, size / 2, 0, 0);
+                
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Додаємо енергетичні точки
+                if (growth > 0.9) {
+                    ctx.fillStyle = `hsla(${layerHue}, 100%, 80%, ${Math.random() * 0.5})`;
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+        }
+        ctx.restore();
+
+        time += 0.01;
+        requestAnimationFrame(drawFlower);
+    }
+
+    // Аудіо-резонанс (Біоніка)
+    function startAudio() {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(resonanceFreq, audioCtx.currentTime);
+        
+        // Модуляція "дихання"
+        const lfo = audioCtx.createOscillator();
+        lfo.frequency.value = 0.5; // 0.5 Гц
+        const lfoGain = audioCtx.createGain();
+        lfoGain.gain.value = 2; 
+        
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 3);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        lfo.start();
+    }
+
+    startBtn.addEventListener('click', () => {
+        isStarted = true;
+        startAudio();
+        startBtn.style.display = 'none';
+    });
+
+    drawFlower();
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+</body>
+</html>
