@@ -145,4 +145,48 @@
                 
                 const grad = ctx.createLinearGradient(0, 0, 0, len);
                 grad.addColorStop(0, `hsla(${hue}, 100%, 70%, 0)`);
-                grad.addColorStop(0.5, `hsla(${hue}, 10
+                grad.addColorStop(0.5, `hsla(${hue}, 100%, 75%, 0.9)`);
+                grad.addColorStop(1, `hsla(${hue}, 100%, 70%, 0)`);
+
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 4; // Товстіші лінії
+                ctx.lineCap = 'round';
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(50, len / 2, 0, len);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+            time += config.speed;
+            requestAnimationFrame(animate);
+        }
+
+        function playSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 1);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+            } catch(e) {}
+        }
+
+        startBtn.addEventListener('click', () => {
+            playSound();
+            startBtn.style.display = 'none';
+        });
+
+        createAura();
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
