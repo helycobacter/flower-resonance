@@ -4,39 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        /* Пряме керування фоном через CSS для надійності */
-        body { 
-            margin: 0; 
-            padding: 0;
-            background: #000; 
-            color: #fff; 
-            font-family: sans-serif; 
-            overflow: hidden; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center;
-        }
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 2; }
         #ui { position: relative; z-index: 10; text-align: center; pointer-events: none; }
-        #startBtn { 
-            pointer-events: auto; 
-            padding: 15px 30px; 
-            background: #fff; 
-            color: #000; 
-            border: none;
-            border-radius: 25px; 
-            font-weight: bold;
-            cursor: pointer;
-        }
-        #display { margin-bottom: 20px; font-size: 16px; font-weight: bold; text-shadow: 2px 2px 4px #000; }
+        #startBtn { pointer-events: auto; padding: 15px 35px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.4); color: #fff; border-radius: 30px; cursor: pointer; backdrop-filter: blur(5px); }
+        #display { margin-bottom: 20px; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.8; }
+        .star { position: absolute; background: #fff; border-radius: 50%; opacity: 0.5; z-index: 0; animation: twinkle var(--d) infinite; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.8; } }
     </style>
 </head>
 <body>
     <div id="ui">
-        <div id="display">LOADING DNA...</div>
-        <button id="startBtn">START RESONANCE</button>
+        <div id="display">Connecting to Info-Field...</div>
+        <button id="startBtn">Reveal Resonance</button>
     </div>
     <canvas id="canvas"></canvas>
 
@@ -45,61 +25,84 @@
         const ctx = canvas.getContext('2d');
         const params = new URLSearchParams(window.location.search);
         
-        // Отримуємо параметри
         const hue = parseInt(params.get('hue')) || 280;
         const petals = parseInt(params.get('petals')) || 8;
-        const ip = params.get('ip') || "0.0.0.0";
+        const freq = parseInt(params.get('freq')) || 432;
         const element = (params.get('element') || "water").toLowerCase();
 
-        // Проста логіка кольорів
-        const colors = {
-            fire: { h: 10,  label: "FIRE" },
-            earth: { h: 120, label: "EARTH" },
-            air: { h: 200, label: "AIR" },
-            water: { h: 225, label: "WATER" }
+        const styles = {
+            fire:  { h: 10,  s: 100, l: 30, speed: 0.04, label: "FIRE" },
+            earth: { h: 120, s: 50,  l: 25, speed: 0.01, label: "EARTH" },
+            air:   { h: 190, s: 70,  l: 50, speed: 0.05, label: "AIR" },
+            water: { h: 210, s: 60,  l: 40, speed: 0.02, label: "WATER" }
         };
-        const config = colors[element] || colors.water;
+        const stl = styles[element] || styles.water;
 
-        // Встановлюємо фон через JS прямо на Body для гарантії
-        document.body.style.background = `radial-gradient(circle at center, hsla(${config.h}, 80%, 20%, 1) 0%, #000 80%)`;
-        document.getElementById('display').innerText = `IP: ${ip} | ${config.label}`;
+        // Встановлюємо фон та створюємо зірки
+        document.body.style.background = `radial-gradient(circle at center, hsla(${stl.h}, ${stl.s}%, 15%, 1) 0%, #000 90%)`;
+        for(let i=0; i<70; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.width = s.style.height = Math.random()*3+'px';
+            s.style.left = Math.random()*100+'%';
+            s.style.top = Math.random()*100+'%';
+            s.style.setProperty('--d', 2+Math.random()*4+'s');
+            document.body.appendChild(s);
+        }
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
         let t = 0;
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Чистимо повністю
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
             ctx.save();
             ctx.translate(canvas.width/2, canvas.height/2);
             
             for(let i=0; i < petals; i++) {
                 ctx.rotate((Math.PI * 2) / petals);
                 ctx.beginPath();
-                let len = 150 + Math.sin(t + i) * 30;
                 
-                // Малюємо яскраву лінію
-                ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.9)`;
-                ctx.lineWidth = 5;
+                // ПАРАМЕТРИ КВІТКИ (НЕ ЗІРКИ)
+                let len = 180 + Math.sin(t * 2 + i) * 30;
+                let cp1x = 60; // Вигин пелюстки
+                let cp1y = len / 2;
+                
+                const g = ctx.createLinearGradient(0, 0, 0, len);
+                g.addColorStop(0, `hsla(${hue}, 100%, 70%, 0)`);
+                g.addColorStop(0.5, `hsla(${hue}, 100%, 75%, 0.8)`);
+                g.addColorStop(1, `hsla(${hue}, 100%, 70%, 0)`);
+
+                ctx.strokeStyle = g;
+                ctx.lineWidth = 3;
                 ctx.lineCap = 'round';
+                
+                // Малюємо пелюстку як вигнуту лінію
                 ctx.moveTo(0, 0);
-                ctx.quadraticCurveTo(40, len/2, 0, len);
+                ctx.quadraticCurveTo(cp1x, cp1y, 0, len);
+                // Малюємо симетричну сторону пелюстки для об'єму
+                ctx.quadraticCurveTo(-cp1x, cp1y, 0, 0);
+                
                 ctx.stroke();
             }
             ctx.restore();
-            t += 0.03;
+            t += stl.speed;
             requestAnimationFrame(draw);
         }
 
+        document.getElementById('display').innerText = `DNA Resonance: ${stl.label}`;
+
         document.getElementById('startBtn').onclick = () => {
-            document.getElementById('ui').style.display = 'none';
-            // Звук
+            document.getElementById('startBtn').style.display = 'none';
             try {
                 const ac = new (window.AudioContext || window.webkitAudioContext)();
                 const o = ac.createOscillator();
                 const g = ac.createGain();
-                o.frequency.value = parseInt(params.get('freq')) || 432;
-                g.gain.value = 0.1;
+                o.frequency.value = freq;
+                g.gain.setValueAtTime(0, ac.currentTime);
+                g.gain.linearRampToValueAtTime(0.2, ac.currentTime + 1);
                 o.connect(g); g.connect(ac.destination);
                 o.start();
             } catch(e) {}
