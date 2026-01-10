@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flower DNA</title>
+    <title>Living Flower DNA</title>
     <style>
-        /* 1. ФОН ЗАДАЄМО ЧЕРЕЗ CSS (Гарантія, що не буде чорного екрану) */
         body { 
             margin: 0; 
             overflow: hidden; 
             height: 100vh; 
+            /* Гарантований фон через CSS */
             background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%);
             display: flex; 
             align-items: center; 
             justify-content: center;
-            font-family: monospace;
         }
         
         canvas { 
             position: absolute; 
             top: 0; 
             left: 0; 
-            mix-blend-mode: screen; /* Легке накладання */
+            mix-blend-mode: screen; 
         }
 
         #ui { 
@@ -30,203 +29,181 @@
             text-align: center; 
             width: 100%; 
             pointer-events: none;
+            bottom: -30%; /* Опускаємо кнопку нижче */
         }
 
         #startBtn { 
             pointer-events: auto; 
-            padding: 15px 35px; 
+            padding: 15px 40px; 
             background: rgba(255, 255, 255, 0.1); 
-            border: 1px solid rgba(255, 255, 255, 0.5); 
+            border: 1px solid rgba(255, 255, 255, 0.4); 
             color: #fff; 
             border-radius: 50px; 
             cursor: pointer; 
-            font-size: 14px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(255,255,255,0.2);
-            transition: 0.3s;
-        }
-
-        /* Блок для виведення помилок, якщо вони будуть */
-        #debug {
-            position: absolute;
-            top: 0;
-            left: 0;
-            color: red;
-            background: rgba(0,0,0,0.8);
-            padding: 10px;
             font-size: 12px;
-            z-index: 999;
-            display: none; 
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            transition: 0.5s;
         }
     </style>
 </head>
 <body>
 
-    <div id="debug"></div>
-
     <div id="ui">
-        <button id="startBtn">START JOURNEY</button>
+        <button id="startBtn">START RESONANCE</button>
     </div>
     
     <canvas id="canvas"></canvas>
 
     <script>
-        // Глобальний перехоплювач помилок (щоб ми бачили, що не так)
-        window.onerror = function(msg, url, line) {
-            const d = document.getElementById('debug');
-            d.style.display = 'block';
-            d.innerHTML += `Error: ${msg}<br>Line: ${line}<br>`;
-            return false;
-        };
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Отримуємо параметри
+        const params = new URLSearchParams(window.location.search);
+        const hue = parseInt(params.get('hue')) || 280;
+        const petals = parseInt(params.get('petals')) || 8;
+        const freq = parseInt(params.get('freq')) || 432;
+        const element = (params.get('element') || "water").toLowerCase();
 
-        try {
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const btn = document.getElementById('startBtn');
-            
-            // 1. Очищення параметрів (Захист від null)
-            const params = new URLSearchParams(window.location.search);
-            const hue = parseInt(params.get('hue')) || 280;
-            const petals = parseInt(params.get('petals')) || 8;
-            const freq = parseInt(params.get('freq')) || 432;
-            const element = (params.get('element') || "water").toLowerCase();
+        // Налаштування під стихію
+        let speed = 0.02;
+        let themeHue = 220;
+        if(element.includes("fire")) { speed = 0.03; themeHue = 10; }
+        else if(element.includes("earth")) { speed = 0.01; themeHue = 110; }
+        else if(element.includes("air")) { speed = 0.04; themeHue = 190; }
 
-            // 2. Налаштування (Без складних об'єктів)
-            let speed = 0.02;
-            let themeHue = 220;
-            
-            if(element.includes("fire")) { speed = 0.04; themeHue = 10; }
-            else if(element.includes("earth")) { speed = 0.01; themeHue = 120; }
-            else if(element.includes("air")) { speed = 0.05; themeHue = 190; }
+        // Фон сторінки під колір стихії
+        document.body.style.background = `radial-gradient(circle at center, hsla(${themeHue}, 80%, 10%, 1) 0%, #000000 90%)`;
 
-            // Оновлюємо фон CSS під стихію
-            document.body.style.background = `radial-gradient(circle at center, hsla(${themeHue}, 60%, 15%, 1) 0%, #000000 100%)`;
+        let w, h;
+        const stars = [];
 
-            let w, h;
-            const stars = [];
-
-            function resize() {
-                w = canvas.width = window.innerWidth;
-                h = canvas.height = window.innerHeight;
-                // Перестворюємо зірки при зміні розміру
-                stars.length = 0;
-                for(let i=0; i<100; i++) {
-                    stars.push({
-                        x: Math.random() * w,
-                        y: Math.random() * h,
-                        size: Math.random() * 2 + 0.5,
-                        speed: Math.random() * 0.5 + 0.1
-                    });
-                }
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
-            let t = 0;
-
-            function draw() {
-                // Очищаємо екран (просто прозорість, бо фон у нас в CSS)
-                ctx.clearRect(0, 0, w, h);
-
-                // 1. ЗІРКИ
-                ctx.fillStyle = "white";
-                ctx.shadowBlur = 0; // Вимикаємо світіння для зірок для продуктивності
-                
-                stars.forEach(s => {
-                    ctx.globalAlpha = 0.5 + Math.sin(t * 2 + s.x) * 0.3;
-                    ctx.beginPath();
-                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Рух
-                    s.y -= s.speed;
-                    if(s.y < 0) { s.y = h; s.x = Math.random() * w; }
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            stars.length = 0;
+            for(let i=0; i<120; i++) {
+                stars.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    size: Math.random() * 2,
+                    speed: Math.random() * 0.5 + 0.1
                 });
-
-                // 2. КВІТКА
-                ctx.save();
-                ctx.translate(w / 2, h / 2);
-                
-                // Легке дихання
-                const scaleOsc = 1 + Math.sin(t * 0.5) * 0.05;
-                ctx.scale(scaleOsc, scaleOsc);
-                ctx.rotate(t * 0.1);
-
-                // Сяйво квітки
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = `hsla(${hue}, 100%, 50%, 0.8)`;
-                ctx.globalCompositeOperation = 'source-over'; // Стандартний режим
-
-                // Малюємо кілька шарів
-                for(let layer = 0; layer < 3; layer++) {
-                    const layerSize = 1 - (layer * 0.2);
-                    const alpha = 1 - (layer * 0.2);
-                    
-                    for(let i = 0; i < petals; i++) {
-                        ctx.save();
-                        const angle = (Math.PI * 2 / petals) * i + (layer * 0.1);
-                        ctx.rotate(angle);
-
-                        ctx.strokeStyle = `hsla(${hue + layer*10}, 100%, 70%, ${alpha})`;
-                        ctx.lineWidth = 2;
-
-                        const len = 150 * layerSize;
-                        const wid = 50 * layerSize;
-
-                        ctx.beginPath();
-                        ctx.moveTo(0, 0);
-                        ctx.quadraticCurveTo(wid, len / 2, 0, len);
-                        ctx.quadraticCurveTo(-wid, len / 2, 0, 0);
-                        ctx.stroke();
-                        
-                        // Жилка
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(0, 0);
-                        ctx.lineTo(0, len * 0.8);
-                        ctx.stroke();
-
-                        ctx.restore();
-                    }
-                }
-
-                ctx.restore();
-
-                t += speed;
-                requestAnimationFrame(draw);
             }
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-            // Запуск анімації одразу
-            draw();
+        let t = 0;
 
-            // Обробка кнопки
-            btn.addEventListener('click', () => {
-                btn.style.opacity = 0;
-                setTimeout(() => btn.remove(), 500);
+        function draw() {
+            ctx.clearRect(0, 0, w, h); // Очищення (фон залишається CSS)
 
-                try {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    if (AudioContext) {
-                        const ac = new AudioContext();
-                        const osc = ac.createOscillator();
-                        const gn = ac.createGain();
-                        osc.frequency.value = freq;
-                        gn.gain.setValueAtTime(0, ac.currentTime);
-                        gn.gain.linearRampToValueAtTime(0.1, ac.currentTime + 1);
-                        osc.connect(gn);
-                        gn.connect(ac.destination);
-                        osc.start();
-                    }
-                } catch(e) {
-                    console.log("Audio error: " + e);
-                }
+            // --- 1. ЗІРКИ (Політ вгору) ---
+            ctx.fillStyle = "white";
+            stars.forEach(s => {
+                // Мерехтіння
+                ctx.globalAlpha = 0.3 + Math.abs(Math.sin(t + s.x)) * 0.7;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                s.y -= s.speed; // Рух вгору
+                if(s.y < 0) { s.y = h; s.x = Math.random() * w; }
             });
 
-        } catch (criticalError) {
-            document.getElementById('debug').style.display = 'block';
-            document.getElementById('debug').innerText = "CRITICAL: " + criticalError.message;
+            // --- 2. ЖИВА КВІТКА ---
+            ctx.save();
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(t * 0.1); // Обертання всієї структури
+
+            // Малюємо 3 шари пелюсток
+            for(let layer = 0; layer < 3; layer++) {
+                // Параметри шару
+                const layerScale = 1 - (layer * 0.25); 
+                const layerAlpha = 1 - (layer * 0.2);
+                
+                // Кожен шар обертається трохи інакше (ефект турбіни)
+                ctx.save();
+                ctx.rotate(Math.sin(t * 0.5) * 0.1 * layer); 
+
+                for(let i = 0; i < petals; i++) {
+                    ctx.save();
+                    const angle = (Math.PI * 2 / petals) * i;
+                    ctx.rotate(angle);
+
+                    // --- МАГІЯ МОРФІНГУ ---
+                    // Обчислюємо унікальну деформацію для кожної пелюстки в реальному часі
+                    
+                    // 1. Довжина "дихає"
+                    const breathe = Math.sin(t * 2 + i + layer) * 20;
+                    const len = (160 + breathe) * layerScale;
+                    
+                    // 2. Ширина змінюється
+                    const wid = (50 + Math.cos(t * 3 + i) * 10) * layerScale;
+                    
+                    // 3. Кінчик вигинається (як язик полум'я або водорость)
+                    const tipWave = Math.sin(t * 3 + layer + i) * 15; 
+
+                    // Стиль ліній
+                    ctx.strokeStyle = `hsla(${hue + layer * 15}, 100%, 70%, ${layerAlpha})`;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = `hsla(${hue}, 100%, 50%, ${layerAlpha})`;
+                    ctx.lineWidth = 2;
+
+                    // Малюємо пелюстку кривими Безьє
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    // Ліва сторона (вигнута)
+                    ctx.bezierCurveTo(wid, len / 3, wid, len * 0.8, tipWave, len);
+                    // Права сторона (симетрично вигнута)
+                    ctx.bezierCurveTo(-wid, len * 0.8, -wid, len / 3, 0, 0);
+                    ctx.stroke();
+                    
+                    // Центральна жилка (теж жива)
+                    ctx.beginPath();
+                    ctx.globalAlpha = 0.5;
+                    ctx.moveTo(0, 0);
+                    ctx.quadraticCurveTo(tipWave / 2, len / 2, tipWave, len * 0.8);
+                    ctx.stroke();
+
+                    ctx.restore();
+                }
+                ctx.restore(); // Кінець обертання шару
+            }
+
+            ctx.restore(); // Кінець центрування
+
+            t += speed;
+            requestAnimationFrame(draw);
         }
+
+        draw();
+
+        // Обробка звуку
+        const btn = document.getElementById('startBtn');
+        btn.addEventListener('click', () => {
+            btn.style.opacity = 0;
+            btn.style.pointerEvents = 'none'; // Блокуємо повторні натискання
+            
+            try {
+                const ac = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ac.createOscillator();
+                const gn = ac.createGain();
+                
+                osc.frequency.value = freq;
+                osc.type = 'triangle'; // М'якший звук, ніж sine
+                
+                gn.gain.setValueAtTime(0, ac.currentTime);
+                gn.gain.linearRampToValueAtTime(0.15, ac.currentTime + 2);
+                
+                osc.connect(gn);
+                gn.connect(ac.destination);
+                osc.start();
+            } catch(e) {}
+        });
     </script>
 </body>
 </html>
