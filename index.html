@@ -31,10 +31,10 @@
         const element = (params.get('element') || "water").toLowerCase();
 
         const styles = {
-            fire:  { h: 15,  s: 100, l: 50, speed: 0.05, label: "ВОГОНЬ" },
-            earth: { h: 125, s: 60,  l: 35, speed: 0.015, label: "ЗЕМЛЯ" },
-            air:   { h: 195, s: 80,  l: 70, speed: 0.06, label: "ПОВІТРЯ" },
-            water: { h: 225, s: 80,  l: 45, speed: 0.02, label: "ВОДА" }
+            fire:  { h: 15,  s: 100, l: 80, speed: 0.05, label: "ВОГОНЬ" },
+            earth: { h: 125, s: 80,  l: 70, speed: 0.015, label: "ЗЕМЛЯ" },
+            air:   { h: 195, s: 90,  l: 85, speed: 0.06, label: "ПОВІТРЯ" },
+            water: { h: 225, s: 90,  l: 75, speed: 0.02, label: "ВОДА" }
         };
         const stl = styles[element] || styles.water;
         document.getElementById('display').innerText = `IP: ${params.get('ip')} | ${stl.label}`;
@@ -91,3 +91,4 @@
     </script>
 </body>
 </html>
+
