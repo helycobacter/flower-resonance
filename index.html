@@ -105,7 +105,7 @@
     const ctx = canvas.getContext('2d');
     const startBtn = document.getElementById('startBtn');
     
-    // Отримання параметрів з бота
+    // 1. Отримання параметрів
     const urlParams = new URLSearchParams(window.location.search);
     const hue = parseInt(urlParams.get('hue')) || 280;
     const petalsCount = parseInt(urlParams.get('petals')) || 8;
@@ -113,7 +113,11 @@
     const resonanceFreq = parseInt(urlParams.get('freq')) || 432;
     const element = urlParams.get('element') || "water";
 
-    document.getElementById('display').innerText = `IP: ${ip} | ELEMENT: ${element.toUpperCase()}`;
+    // 2. Оновлення тексту (пробуємо обидва можливі ID для страховки)
+    const uiDisplay = document.getElementById('display') || document.getElementById('ipDisplay');
+    if (uiDisplay) {
+        uiDisplay.innerText = `IP: ${ip} | ELEMENT: ${element.toUpperCase()}`;
+    }
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -169,7 +173,7 @@
             ctx.rotate((Math.PI * 2) / petalsCount);
             
             ctx.beginPath();
-            const len = 150 + Math.sin(time + i) * 30;
+            const len = (150 + Math.sin(time + i) * 30);
             const grad = ctx.createLinearGradient(0, 0, 0, len);
             grad.addColorStop(0, `hsla(${hue}, 100%, 70%, 0)`);
             grad.addColorStop(0.5, `hsla(${hue}, 100%, 70%, 0.5)`);
@@ -183,22 +187,24 @@
         }
 
         ctx.restore();
-        time += style.speed; // Швидкість пульсації залежить від стихії
+        time += style.speed;
         requestAnimationFrame(draw);
     }
 
     function playTone() {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        
-        osc.frequency.setValueAtTime(resonanceFreq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 2);
-        
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.frequency.setValueAtTime(resonanceFreq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 2);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+        } catch(e) { console.log("Audio error:", e); }
     }
 
     startBtn.addEventListener('click', () => {
@@ -217,3 +223,4 @@
 </script>
 </body>
 </html>
+
