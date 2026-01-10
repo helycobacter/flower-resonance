@@ -8,9 +8,9 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #000;
+            background-color: #000; /* Глибокий чорний фон */
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -23,7 +23,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 1;
+            z-index: 2; /* Квітка над фоном */
         }
 
         .ui-container {
@@ -31,61 +31,51 @@
             z-index: 10;
             text-align: center;
             pointer-events: none;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
         }
 
         #display {
-            font-size: 14px;
+            font-size: 16px;
             letter-spacing: 2px;
-            opacity: 0.8;
+            text-shadow: 0 0 15px rgba(255,255,255,0.5);
             margin-bottom: 20px;
+            font-weight: bold;
         }
 
         #startBtn {
-            padding: 15px 30px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 15px 40px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.5);
             color: white;
             cursor: pointer;
             pointer-events: auto;
-            backdrop-filter: blur(5px);
-            border-radius: 30px;
-            transition: 0.3s;
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            transition: 0.4s;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            font-size: 14px;
         }
 
         #startBtn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
         }
 
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: twinkle var(--duration) infinite;
-        }
-
+        /* Стилі для туманності фону */
         .aura {
             position: absolute;
             border-radius: 50%;
-            filter: blur(60px);
-            z-index: 0;
-            opacity: 0.4;
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+            filter: blur(80px);
+            z-index: 1;
+            opacity: 0.6;
+            mix-blend-mode: screen;
         }
     </style>
 </head>
 <body>
 
     <div class="ui-container">
-        <div id="display">ОЧІКУВАННЯ СИГНАЛУ...</div>
-        <button id="startBtn">Активувати резонанс</button>
+        <div id="display">АНАЛІЗ СИГНАЛУ...</div>
+        <button id="startBtn">Активувати Резонанс</button>
     </div>
 
     <canvas id="flowerCanvas"></canvas>
@@ -93,65 +83,52 @@
     <script>
         const canvas = document.getElementById('flowerCanvas');
         const ctx = canvas.getContext('2d');
-        const startBtn = document.getElementById('startBtn');
         const display = document.getElementById('display');
-        
-        // 1. Отримання параметрів та приведення до нижнього регістру
-        const urlParams = new URLSearchParams(window.location.search);
-        const hue = parseInt(urlParams.get('hue')) || 280;
-        const petalsCount = parseInt(urlParams.get('petals')) || 8;
-        const ip = urlParams.get('ip') || "0.0.0.0";
-        const resonanceFreq = parseInt(urlParams.get('freq')) || 432;
-        const rawElement = urlParams.get('element') || "water";
-        const element = rawElement.toLowerCase().trim();
+        const startBtn = document.getElementById('startBtn');
 
-        // Оновлюємо текст
-        display.innerText = `IP: ${ip} | ELEMENT: ${element.toUpperCase()}`;
+        // 1. Отримання та очищення даних
+        const params = new URLSearchParams(window.location.search);
+        const hue = parseInt(params.get('hue')) || 200;
+        const petals = parseInt(params.get('petals')) || 8;
+        const ip = params.get('ip') || "0.0.0.0";
+        const freq = parseInt(params.get('freq')) || 432;
+        const element = (params.get('element') || "water").toLowerCase().trim();
+
+        // 2. Налаштування стихій (ЯСКРАВІ КОЛЬОРИ)
+        const styles = {
+            "fire":  { h: 10,  s: 100, l: 50, speed: 0.05, label: "ВОГОНЬ" },
+            "earth": { h: 120, s: 60,  l: 30, speed: 0.015, label: "ЗЕМЛЯ" },
+            "air":   { h: 190, s: 80,  l: 70, speed: 0.06, label: "ПОВІТРЯ" },
+            "water": { h: 220, s: 80,  l: 45, speed: 0.02, label: "ВОДА" }
+        };
+
+        const config = styles[element] || styles.water;
+
+        // Оновлюємо UI
+        display.innerText = `IP: ${ip} | ELEMENT: ${config.label}`;
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // Конфігурація стихій (кольорів фону та швидкості)
-        const elementStyles = {
-            "fire":  { h: 15,  s: 90, l: 50, speed: 0.04 },
-            "earth": { h: 130, s: 40, l: 30, speed: 0.015 },
-            "air":   { h: 200, s: 80, l: 70, speed: 0.05 },
-            "water": { h: 220, s: 70, l: 40, speed: 0.02 }
-        };
-
-        const style = elementStyles[element] || elementStyles.water;
-
-        // Створення зірок та аури стихії
-        function initBackground() {
-            // Зірки
-            for (let i = 0; i < 80; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                const size = Math.random() * 2;
-                star.style.width = star.style.height = `${size}px`;
-                star.style.left = `${Math.random() * 100}%`;
-                star.style.top = `${Math.random() * 100}%`;
-                star.style.setProperty('--duration', `${2 + Math.random() * 4}s`);
-                document.body.appendChild(star);
-            }
-
-            // Аура стихії (фон)
-            for (let i = 0; i < 3; i++) {
+        // 3. Функція фонової аури (щоб не було чорного екрану)
+        function createAura() {
+            for (let i = 0; i < 5; i++) {
                 const aura = document.createElement('div');
                 aura.className = 'aura';
-                const size = 400 + Math.random() * 300;
+                const size = 600 + Math.random() * 400;
                 aura.style.width = aura.style.height = `${size}px`;
-                aura.style.left = `${Math.random() * 60 - 10}%`;
-                aura.style.top = `${Math.random() * 60 - 10}%`;
-                aura.style.background = `radial-gradient(circle, hsla(${style.h}, ${style.s}%, ${style.l}%, 0.3) 0%, transparent 70%)`;
+                aura.style.left = (Math.random() * 100 - 20) + '%';
+                aura.style.top = (Math.random() * 100 - 20) + '%';
+                aura.style.background = `radial-gradient(circle, hsla(${config.h}, ${config.s}%, ${config.l}%, 0.5) 0%, transparent 70%)`;
                 document.body.appendChild(aura);
             }
         }
 
         let time = 0;
 
-        function drawFlower() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        function animate() {
+            // Малюємо напівпрозорий фон для ефекту шлейфу
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             const cx = canvas.width / 2;
@@ -160,58 +137,12 @@
             ctx.save();
             ctx.translate(cx, cy);
 
-            for (let i = 0; i < petalsCount; i++) {
-                ctx.rotate((Math.PI * 2) / petalsCount);
+            for (let i = 0; i < petals; i++) {
+                ctx.rotate((Math.PI * 2) / petals);
                 
                 ctx.beginPath();
-                const len = 150 + Math.sin(time * 2 + i) * 30;
+                const len = 160 + Math.sin(time * 2 + i) * 40; // Пульсація
                 
                 const grad = ctx.createLinearGradient(0, 0, 0, len);
                 grad.addColorStop(0, `hsla(${hue}, 100%, 70%, 0)`);
-                grad.addColorStop(0.5, `hsla(${hue}, 100%, 70%, 0.8)`);
-                grad.addColorStop(1, `hsla(${hue}, 100%, 70%, 0)`);
-
-                ctx.strokeStyle = grad;
-                ctx.lineWidth = 3;
-                ctx.moveTo(0, 0);
-                ctx.quadraticCurveTo(40, len / 2, 0, len);
-                ctx.stroke();
-            }
-
-            ctx.restore();
-            time += style.speed;
-            requestAnimationFrame(drawFlower);
-        }
-
-        function playSound() {
-            try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const audioCtx = new AudioContext();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                
-                osc.frequency.setValueAtTime(resonanceFreq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 1);
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-            } catch(e) { console.log("Audio API not supported"); }
-        }
-
-        startBtn.addEventListener('click', () => {
-            playSound();
-            startBtn.style.display = 'none';
-        });
-
-        initBackground();
-        drawFlower();
-
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-    </script>
-</body>
-</html>
+                grad.addColorStop(0.5, `hsla(${hue}, 10
