@@ -17,7 +17,7 @@
     </div>
     <canvas id="canvas"></canvas>
 
-    <script>
+   <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const params = new URLSearchParams(window.location.search);
@@ -38,16 +38,88 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // Генерація статичних зірок
         const stars = [];
         for(let i=0; i<100; i++) {
-            stars.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 2,
-                o: Math.random()
-            });
+            stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, o: Math.random() });
         }
+
+        let t = 0;
+
+        // --- ФРАКТАЛЬНА ФУНКЦІЯ МАЛЮВАННЯ ---
+        function drawFractalPetal(x, y, length, angle, depth) {
+            if (depth <= 0) return;
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+
+            // Градієнт залежить від глибини рекурсії
+            const g = ctx.createLinearGradient(0, 0, 0, length);
+            g.addColorStop(0, `hsla(${hue}, 100%, ${70 - depth*10}%, 0)`);
+            g.addColorStop(0.5, `hsla(${hue + depth*10}, 100%, 75%, ${0.8/depth})`);
+            g.addColorStop(1, `hsla(${hue}, 100%, 70%, 0)`);
+
+            ctx.strokeStyle = g;
+            ctx.lineWidth = 1.5;
+
+            // Малюємо основну дугу пелюстки
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(30 * depth, length / 2, 0, length);
+            ctx.stroke();
+
+            // Рекурсивний виклик: створюємо менші пелюстки по боках
+            const nextLen = length * 0.7;
+            drawFractalPetal(0, length / 2, nextLen, 0.4 + Math.sin(t)*0.1, depth - 1);
+            drawFractalPetal(0, length / 2, nextLen, -0.4 - Math.sin(t)*0.1, depth - 1);
+
+            ctx.restore();
+        }
+
+        function draw() {
+            // Фон з градієнтом
+            const grd = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 10, canvas.width/2, canvas.height/2, canvas.width*0.7);
+            grd.addColorStop(0, `hsla(${stl.h}, ${stl.s}%, 12%, 1)`);
+            grd.addColorStop(1, "#000");
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Зірки
+            ctx.fillStyle = "#fff";
+            stars.forEach(s => {
+                ctx.globalAlpha = s.o + Math.sin(t + s.x) * 0.2;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            ctx.save();
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.rotate(t * 0.1); // Повільне обертання всієї квітки
+
+            for(let i=0; i < petals; i++) {
+                // Малюємо кожну основну пелюстку як дерево фракталів
+                drawFractalPetal(0, 0, 150 + Math.sin(t)*20, (Math.PI * 2 / petals) * i, 4);
+            }
+            ctx.restore();
+
+            t += stl.speed;
+            requestAnimationFrame(draw);
+        }
+
+        document.getElementById('startBtn').onclick = () => {
+            const ac = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ac.createOscillator();
+            const g = ac.createGain();
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0, ac.currentTime);
+            g.gain.linearRampToValueAtTime(0.1, ac.currentTime + 1);
+            o.connect(g); g.connect(ac.destination);
+            o.start();
+            document.getElementById('startBtn').style.display = 'none';
+        };
+
+        draw();
+    </script>
 
         let t = 0;
         function draw() {
@@ -113,4 +185,5 @@
     </script>
 </body>
 </html>
+
 
