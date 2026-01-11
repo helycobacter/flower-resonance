@@ -3,48 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DeepTown: Multiverse</title>
+    <title>DeepTown: Multiverse Glitch</title>
     <style>
         body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; }
         canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 4s ease-in-out; z-index: 1; pointer-events: none; }
         #intro { position: relative; z-index: 10; text-align: center; width: 85%; transition: opacity 2s; }
-        .step { display: none; animation: fadeIn 1s forwards; }
+        .step { display: none; animation: fadeIn 0.5s forwards; }
         .active { display: block; }
         
         h1 { font-weight: 200; letter-spacing: 5px; font-size: 16px; margin-bottom: 30px; }
         .theme-deep h1 { color: #0f0; text-shadow: 0 0 10px #0f0; }
-        .theme-neon h1 { color: #f0f; text-shadow: 0 0 15px #f0f; }
+        .theme-neon h1 { color: #f0f; text-shadow: 0 0 15px #f0f; font-family: 'OCR A Std', monospace; }
         .theme-zen h1 { color: #fa0; text-shadow: 0 0 15px #fa0; }
 
         .controls { display: flex; flex-direction: column; gap: 12px; align-items: center; }
-        button { background: none; border: 1px solid currentColor; padding: 14px 30px; cursor: pointer; letter-spacing: 2px; font-size: 10px; text-transform: uppercase; color: inherit; transition: 0.3s; width: 220px; }
+        button { background: none; border: 1px solid currentColor; padding: 14px 30px; cursor: pointer; letter-spacing: 2px; font-size: 10px; text-transform: uppercase; color: inherit; transition: 0.1s; width: 220px; }
         button:hover { background: rgba(255,255,255,0.1); box-shadow: 0 0 20px currentColor; }
         
         #exitBtn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; opacity: 0; display: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 20px; font-size: 9px; background: none; transition: 3s; cursor: pointer; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Глітч-ефект для всього контейнера */
+        .glitch-active { animation: glitch 0.2s infinite; filter: hue-rotate(90deg); }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-3px, 2px); }
+            40% { transform: translate(3px, -2px); }
+            60% { transform: translate(-3px, -2px); }
+            80% { transform: translate(3px, 2px); }
+            100% { transform: translate(0); }
+        }
     </style>
 </head>
 <body class="theme-deep" id="bodyTag">
 
 <canvas id="canvas"></canvas>
-<button id="exitBtn" onclick="location.reload()">[ REBOOT SYSTEM ]</button>
+<button id="exitBtn" onclick="location.reload()">[ RECONNECT ]</button>
 
 <div id="intro">
     <div id="s1" class="step active">
         <h1>[ SELECT ARCHETYPE ]</h1>
         <div class="controls">
-            <button onclick="setTheme('deep'); initAudioAndGo(1,2)">01. DEEP (MEDITATIVE)</button>
-            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">02. NEON (DYNAMIC)</button>
-            <button onclick="setTheme('zen'); initAudioAndGo(1,2)">03. ZEN (HARMONY)</button>
+            <button onclick="setTheme('deep'); initAudioAndGo(1,2)">01. DEEP_RESONANCE</button>
+            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">02. NEON_GLITCH</button>
+            <button onclick="setTheme('zen'); initAudioAndGo(1,2)">03. ZEN_HARMONY</button>
         </div>
     </div>
     <div id="s2" class="step">
-        <h1 id="step2Title">[ CALIBRATING SENSES ]</h1>
-        <div class="controls"><button onclick="uiClick(); go(2,3)">PROCEED</button></div>
+        <h1 id="step2Title">[ DATA_STREAM_OPEN ]</h1>
+        <div class="controls"><button onclick="uiClick(); go(2,3)">SYNC</button></div>
     </div>
     <div id="s3" class="step">
-        <h1>[ CONNECTION ESTABLISHED ]</h1>
-        <div class="controls"><button id="startBtn" onclick="finalSequence()">ENTER</button></div>
+        <h1>[ READY_TO_OVERLOAD ]</h1>
+        <div class="controls"><button id="startBtn" onclick="finalSequence()">EXECUTE</button></div>
     </div>
 </div>
 
@@ -57,13 +68,31 @@
     function init() {
         w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
         objects.length = 0;
-        for (let i = 0; i < 500; i++) objects.push({ x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w, r: Math.random()*2 });
+        for (let i = 0; i < 500; i++) objects.push({ x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w });
     }
     window.onresize = init; init();
 
     function setTheme(t) {
         currentTheme = t;
         document.getElementById('bodyTag').className = 'theme-' + t;
+    }
+
+    // СИНТЕЗАТОР МОДЕМА
+    function playModemSound() {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        
+        // Хаотичні піски (Dial-up noise)
+        for (let i = 0; i < 15; i++) {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = i % 2 === 0 ? 'square' : 'sawtooth';
+            o.frequency.setValueAtTime(100 + Math.random() * 3000, now + i * 0.1);
+            g.gain.setValueAtTime(0.02, now + i * 0.1);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.15);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(now + i * 0.1); o.stop(now + i * 0.1 + 0.15);
+        }
     }
 
     function initAudioAndGo(from, to) {
@@ -74,48 +103,45 @@
             masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
         }
         if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (currentTheme === 'neon') playModemSound();
         uiClick(); go(from, to);
     }
 
     function uiClick() {
         const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-        o.type = currentTheme === 'neon' ? 'square' : 'sine';
-        o.frequency.value = currentTheme === 'neon' ? 880 : 440;
-        g.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        o.type = 'square';
+        o.frequency.value = currentTheme === 'neon' ? 1200 : 440;
+        g.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
         o.connect(g); g.connect(audioCtx.destination);
         o.start(); o.stop(audioCtx.currentTime + 0.1);
     }
 
     function startAmbient() {
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const lfo = audioCtx.createOscillator();
-        const lfoGain = audioCtx.createGain();
-
-        if (currentTheme === 'deep') {
-            osc1.type = 'triangle'; osc1.frequency.value = 108;
-            osc2.type = 'sine'; osc2.frequency.value = 109;
-        } else if (currentTheme === 'neon') {
-            osc1.type = 'sawtooth'; osc1.frequency.value = 55;
-            osc2.type = 'square'; osc2.frequency.value = 110;
-        } else { // Zen
-            osc1.type = 'sine'; osc1.frequency.value = 256; // C4 Note
-            osc2.type = 'sine'; osc2.frequency.value = 384; // G4 Note
-        }
-
-        osc1.connect(masterGain); osc2.connect(masterGain);
+        const osc = audioCtx.createOscillator();
+        osc.type = currentTheme === 'neon' ? 'sawtooth' : 'triangle';
+        osc.frequency.value = currentTheme === 'neon' ? 60 : 108;
+        osc.connect(masterGain);
         masterGain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 4);
-        osc1.start(); osc2.start();
+        osc.start();
     }
 
     function go(from, to) {
         document.getElementById('s'+from).classList.remove('active');
         document.getElementById('s'+to).classList.add('active');
-        if(to === 2) { canvas.style.opacity = "0.5"; startAmbient(); render(); }
+        if(to === 2) { 
+            canvas.style.opacity = "0.6"; 
+            startAmbient(); 
+            render(); 
+        }
     }
 
     function finalSequence() {
+        if (currentTheme === 'neon') {
+            document.body.classList.add('glitch-active');
+            playModemSound();
+            setTimeout(() => document.body.classList.remove('glitch-active'), 1500);
+        }
         uiClick(); isLaunched = true;
         document.getElementById('intro').style.opacity = '0';
         setTimeout(() => {
@@ -127,59 +153,55 @@
     }
 
     function render() {
-        // Рівень Motion Blur залежить від теми
-        let bgAlpha = 0.2;
-        if(currentTheme === 'neon') bgAlpha = 0.4;
-        if(currentTheme === 'zen') bgAlpha = 0.1;
-        
+        let bgAlpha = currentTheme === 'neon' ? 0.5 : 0.2;
         ctx.fillStyle = `rgba(0,0,0,${bgAlpha})`;
         ctx.fillRect(0, 0, w, h);
 
-        const speed = currentTheme === 'neon' ? 18 : (currentTheme === 'zen' ? 0.3 : 0.8);
+        const speed = currentTheme === 'neon' ? 25 : (currentTheme === 'zen' ? 0.4 : 1);
         
         objects.forEach(s => {
             s.z -= speed; if (s.z <= 0) s.z = w;
             const px = (s.x / s.z) * w + w / 2, py = (s.y / s.z) * h + h / 2;
-            const size = (1 - s.z/w) * (currentTheme === 'neon' ? 4 : 2);
+            const size = (1 - s.z/w) * 3;
             
-            ctx.fillStyle = currentTheme === 'deep' ? '#0f0' : (currentTheme === 'neon' ? '#f0f' : '#fa0');
+            ctx.fillStyle = currentTheme === 'deep' ? '#0f0' : (currentTheme === 'neon' ? '#0ff' : '#fa0');
             ctx.globalAlpha = (1 - s.z / w);
             
+            if(currentTheme === 'neon' && Math.random() > 0.98) ctx.fillStyle = "#f0f"; // Глітч кольору частинок
+
             ctx.beginPath();
-            if(currentTheme === 'zen') { // Кола на воді
-                ctx.arc(px, py, size * 20 * (1-s.z/w), 0, Math.PI*2);
+            if(currentTheme === 'zen') {
+                ctx.arc(px, py, size * 15 * (1-s.z/w), 0, Math.PI*2);
                 ctx.strokeStyle = ctx.fillStyle; ctx.stroke();
-            } else if(currentTheme === 'neon') { // Квадратні частинки
-                ctx.rect(px, py, size*5, 1); ctx.fill();
-            } else { // Зірки
+            } else if(currentTheme === 'neon') {
+                ctx.rect(px, py, size*8, 1); ctx.fill();
+            } else {
                 ctx.arc(px, py, size, 0, Math.PI*2); ctx.fill();
             }
         });
 
         if(isLaunched) {
             if(flowerAlpha < 1) flowerAlpha += 0.003;
-            const bSpeed = currentTheme === 'neon' ? 2.5 : 0.5;
-            growth = 0.6 + Math.sin(t * bSpeed) * 0.4;
+            growth = 0.6 + Math.sin(t * (currentTheme === 'neon' ? 3 : 0.5)) * 0.4;
             
-            // Звукове дихання
-            if(masterGain) masterGain.gain.setTargetAtTime(0.05 + growth*0.1, audioCtx.currentTime, 0.1);
-
             ctx.save();
             ctx.translate(w/2, h/2);
-            ctx.rotate(t * (currentTheme === 'neon' ? 0.5 : 0.1));
+            if(currentTheme === 'neon') ctx.translate(Math.random()*4-2, Math.random()*4-2); // Тремтіння об'єкта
 
-            const parts = currentTheme === 'neon' ? 12 : (currentTheme === 'zen' ? 6 : 8);
+            ctx.rotate(t * (currentTheme === 'neon' ? 0.8 : 0.1));
+
+            const parts = currentTheme === 'neon' ? 16 : (currentTheme === 'zen' ? 6 : 8);
             for(let i=0; i<parts; i++) {
                 ctx.rotate((Math.PI*2)/parts);
-                ctx.globalAlpha = flowerAlpha * 0.6;
-                ctx.strokeStyle = currentTheme === 'deep' ? '#0f0' : (currentTheme === 'neon' ? '#0ff' : '#fa0');
-                ctx.shadowBlur = 15 * growth; ctx.shadowColor = ctx.strokeStyle;
+                ctx.globalAlpha = flowerAlpha * 0.5;
+                ctx.strokeStyle = currentTheme === 'deep' ? '#0f0' : (currentTheme === 'neon' ? '#f0f' : '#fa0');
                 
                 ctx.beginPath();
                 if(currentTheme === 'neon') {
-                    ctx.rect(-2, 20*growth, 4, 120*growth);
+                    ctx.moveTo(0, 20); ctx.lineTo(0, 150 * growth);
+                    if(Math.random() > 0.9) ctx.lineTo(20, 150 * growth); // Глітч форми
                 } else if(currentTheme === 'zen') {
-                    ctx.arc(0, 100*growth, 10, 0, Math.PI*2);
+                    ctx.arc(0, 100*growth, 15, 0, Math.PI*2);
                 } else {
                     ctx.bezierCurveTo(40*growth, 40*growth, 40*growth, 100*growth, 0, 150*growth);
                 }
