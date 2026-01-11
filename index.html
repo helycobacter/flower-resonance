@@ -3,103 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Resonance Master</title>
+    <title>Resonance Matrix</title>
     <style>
         body { 
             margin: 0; overflow: hidden; height: 100vh; background: #000; 
-            color: #fff; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+            color: #fff; font-family: 'Segoe UI', sans-serif;
             display: flex; align-items: center; justify-content: center;
         }
         canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0; transition: opacity 3s; }
         
         #intro { position: relative; z-index: 10; max-width: 85%; text-align: center; }
-        
-        h1 { font-weight: 200; letter-spacing: 8px; margin-bottom: 40px; opacity: 0; animation: fadeIn 2s forwards; }
-        .name-highlight { color: #fff; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
+        h1 { font-weight: 200; letter-spacing: 8px; margin-bottom: 30px; }
+        .name-highlight { color: #fff; border-bottom: 1px solid rgba(255,255,255,0.3); }
 
-        .step { opacity: 0; animation: fadeInSlide 2.5s forwards; margin-bottom: 35px; }
-        .step p { font-size: 16px; letter-spacing: 3px; margin-bottom: 8px; text-transform: uppercase; }
-        .step span { font-size: 13px; color: rgba(255,255,255,0.5); display: block; max-width: 320px; margin: 0 auto; line-height: 1.5; }
+        /* Прогрес-бар */
+        #progressContainer { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin: 20px auto; border-radius: 2px; overflow: hidden; }
+        #progressBar { width: 33.3%; height: 100%; background: #fff; transition: 0.5s; }
 
-        #startBtn { 
-            opacity: 0; animation: fadeIn 2s forwards; animation-delay: 10s;
-            margin-top: 20px; pointer-events: auto; padding: 18px 45px; 
-            background: none; border: 1px solid #fff; color: #fff; 
-            border-radius: 50px; cursor: pointer; letter-spacing: 3px; font-size: 11px;
-            transition: 0.5s;
+        .step { display: none; opacity: 0; transform: translateY(10px); transition: 0.8s; min-height: 120px; }
+        .step.active { display: block; opacity: 1; transform: translateY(0); }
+        .step p { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; color: #fff; }
+        .step span { font-size: 13px; color: rgba(255,255,255,0.5); display: block; max-width: 320px; margin: 0 auto; line-height: 1.6; }
+
+        .controls { margin-top: 40px; }
+        button { 
+            background: none; border: 1px solid rgba(255,255,255,0.4); color: #fff; 
+            padding: 15px 40px; border-radius: 50px; cursor: pointer; letter-spacing: 3px; 
+            font-size: 11px; transition: 0.4s; outline: none;
         }
-        #startBtn:hover { background: #fff; color: #000; box-shadow: 0 0 30px rgba(255,255,255,0.2); }
-
-        @keyframes fadeInSlide {
-            from { opacity: 0; transform: translateY(15px); filter: blur(8px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-        @keyframes fadeIn { to { opacity: 1; } }
+        button:hover:not(:disabled) { border-color: #fff; background: rgba(255,255,255,0.1); }
+        button:disabled { opacity: 0.3; cursor: default; }
+        #startBtn { display: none; border-color: #fff; }
     </style>
 </head>
 <body>
 
     <div id="intro">
         <h1 id="mainTitle">RESONANCE</h1>
+        <div id="progressContainer"><div id="progressBar"></div></div>
         
-        <div class="step" style="animation-delay: 1.5s;">
-            <p>1. ГЕОМЕТРИЧНА МАТРИЦЯ</p>
-            <span>Ваше ім'я перетворено на цифровий код за системою Піфагора. Кількість пелюсток — це ваш унікальний вібраційний контур.</span>
-        </div>
-        
-        <div class="step" style="animation-delay: 4.5s;">
-            <p>2. СПЕКТРАЛЬНИЙ АНАЛІЗ</p>
-            <span>Дата народження визначила домінуючу довжину хвилі. Колір квітки — це візуалізація вашої стихії в момент появи.</span>
-        </div>
-        
-        <div class="step" style="animation-delay: 7.5s;">
-            <p>3. АКУСТИЧНИЙ РЕЗОНАНС</p>
-            <span>Згенеровано акорд на базі частоти 432Гц та вашого числа сили. Дозвольте звуку синхронізувати ваші біоритми.</span>
+        <div id="stepContainer">
+            <div class="step active" id="step1">
+                <p>1. ГЕОМЕТРИЧНА МАТРИЦЯ</p>
+                <span>Ваше ім'я перетворено на цифровий код за системою Піфагора. Кількість пелюсток — це ваш вібраційний контур.</span>
+            </div>
+            <div class="step" id="step2">
+                <p>2. СПЕКТРАЛЬНИЙ АНАЛІЗ</p>
+                <span>Дата народження визначила домінуючу довжину хвилі. Колір квітки — це візуалізація вашої стихії.</span>
+            </div>
+            <div class="step" id="step3">
+                <p>3. АКУСТИЧНИЙ РЕЗОНАНС</p>
+                <span>Згенеровано акорд на частоті 432Гц. Дозвольте звуку синхронізувати ваші біоритми.</span>
+            </div>
         </div>
 
-        <button id="startBtn">УВІЙТИ В МАТРИЦЮ</button>
+        <div class="controls">
+            <button id="nextBtn">ДАЛІ</button>
+            <button id="startBtn">АКТИВАЦІЯ...</button>
+        </div>
     </div>
     
     <canvas id="canvas"></canvas>
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const name = params.get('name') || "USER";
+        const name = params.get('name') || "МАНДРІВНИК";
         const hue = parseInt(params.get('hue')) || 280;
         const petals = parseInt(params.get('petals')) || 8;
         const freq = parseInt(params.get('freq')) || 432;
         const element = (params.get('element') || "water").toLowerCase();
 
-        // Персоналізація заголовка
         document.getElementById('mainTitle').innerHTML = `RESONANCE: <span class="name-highlight">${name.toUpperCase()}</span>`;
 
+        // Логіка кроків
+        let currentS = 1;
+        const nextBtn = document.getElementById('nextBtn');
+        const startBtn = document.getElementById('startBtn');
+        const bar = document.getElementById('progressBar');
+
+        nextBtn.onclick = () => {
+            document.getElementById(`step${currentS}`).classList.remove('active');
+            currentS++;
+            bar.style.width = (currentS * 33.3) + '%';
+            
+            if (currentS <= 3) {
+                document.getElementById(`step${currentS}`).classList.add('active');
+            }
+            if (currentS === 3) {
+                nextBtn.style.display = 'none';
+                startBtn.style.display = 'inline-block';
+                startBtn.disabled = true;
+                let c = 3;
+                const t = setInterval(() => {
+                    startBtn.innerText = `АКТИВАЦІЯ... ${c}`;
+                    if (c-- <= 0) { clearInterval(t); startBtn.innerText = "УВІЙТИ В МАТРИЦЮ"; startBtn.disabled = false; }
+                }, 1000);
+            }
+        };
+
+        // Логіка квітки
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let w, h, t = 0;
         const stars = [];
-
-        const stl = {
-            fire:  { h: 10,  speed: 0.035 },
-            earth: { h: 125, speed: 0.015 },
-            air:   { h: 195, speed: 0.045 },
-            water: { h: 225, speed: 0.022 }
-        }[element] || { h: 220, speed: 0.02 };
-
-        document.body.style.background = `radial-gradient(circle at center, hsla(${stl.h}, 70%, 8%, 1) 0%, #000 100%)`;
+        const stl = { fire:{h:10,s:0.04}, earth:{h:120,s:0.015}, air:{h:190,s:0.05}, water:{h:220,s:0.02} }[element] || {h:220,s:0.02};
 
         function init() {
-            w = canvas.width = window.innerWidth;
-            h = canvas.height = window.innerHeight;
-            stars.length = 0;
-            for(let i=0; i<150; i++) stars.push({x:Math.random()*w, y:Math.random()*h, size:Math.random()*1.8, s:Math.random()*0.6+0.1});
+            w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
+            stars.length = 0; for(let i=0; i<150; i++) stars.push({x:Math.random()*w, y:Math.random()*h, sz:Math.random()*2, sp:Math.random()*0.5+0.1});
         }
-        window.addEventListener('resize', init);
-        init();
+        window.onresize = init; init();
 
         function drawPetal(len, wid, ang, col, alp, tip) {
             ctx.save(); ctx.rotate(ang);
-            ctx.shadowBlur = 20; ctx.shadowColor = col; ctx.strokeStyle = col;
-            ctx.globalAlpha = alp; ctx.lineWidth = 2.5;
+            ctx.shadowBlur=20; ctx.shadowColor=col; ctx.strokeStyle=col; ctx.globalAlpha=alp; ctx.lineWidth=2;
             ctx.beginPath(); ctx.moveTo(0,0);
             ctx.bezierCurveTo(wid, len/3, wid, len*0.8, tip, len);
             ctx.bezierCurveTo(-wid, len*0.8, -wid, len/3, 0,0);
@@ -107,55 +124,4 @@
         }
 
         function animate() {
-            const g = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w*0.8);
-            g.addColorStop(0, `hsla(${stl.h}, 70%, 7%, 1)`); g.addColorStop(1, "#000");
-            ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
-
-            ctx.fillStyle = "#fff";
-            stars.forEach(s => {
-                ctx.globalAlpha = 0.2 + Math.abs(Math.sin(t + s.x)) * 0.6;
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
-                s.y -= s.s; if(s.y < 0) s.y = h;
-            });
-
-            ctx.save(); ctx.translate(w/2, h/2); ctx.rotate(t * 0.08);
-            for(let l=0; l<3; l++) {
-                const sc = 1 - l*0.25;
-                for(let i=0; i<petals; i++) {
-                    const ang = (Math.PI*2/petals)*i;
-                    const len = (175 + Math.sin(t*2+i+l)*25)*sc;
-                    const wid = (60 + Math.cos(t*3+i)*12)*sc;
-                    const tip = Math.sin(t*3+l+i)*18;
-                    drawPetal(len, wid, ang, `hsla(${hue + l*15}, 100%, 75%, 1)`, 0.9-l*0.2, tip);
-                }
-            }
-            ctx.beginPath(); ctx.arc(0,0, 7+Math.sin(t*4)*2, 0, Math.PI*2);
-            ctx.fillStyle = "white"; ctx.shadowBlur = 30; ctx.shadowColor = "white"; ctx.fill();
-            ctx.restore();
-            t += stl.speed; requestAnimationFrame(animate);
-        }
-
-        document.getElementById('startBtn').onclick = () => {
-            document.getElementById('intro').style.transition = 'opacity 2s';
-            document.getElementById('intro').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('intro').style.display = 'none';
-                canvas.style.opacity = '1';
-                animate();
-            }, 2000);
-
-            try {
-                const ac = new (window.AudioContext || window.webkitAudioContext)();
-                const m = ac.createGain(); m.gain.setValueAtTime(0, ac.currentTime);
-                m.gain.linearRampToValueAtTime(0.15, ac.currentTime + 4); m.connect(ac.destination);
-                const osc = (f, v, ty) => {
-                    const o = ac.createOscillator(); const g = ac.createGain();
-                    o.type = ty; o.frequency.value = f; g.gain.value = v;
-                    o.connect(g); g.connect(m); o.start();
-                };
-                osc(freq, 0.5, 'triangle'); osc(freq*2, 0.2, 'sine'); osc(freq*1.5, 0.15, 'sine');
-            } catch(e){}
-        };
-    </script>
-</body>
-</html>.
+            const g = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w*0.8
