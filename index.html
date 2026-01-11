@@ -7,64 +7,63 @@
     <style>
         body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; }
         canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 4s ease-in-out; z-index: 1; pointer-events: none; }
-        #intro { position: relative; z-index: 10; text-align: center; width: 85%; }
+        #intro { position: relative; z-index: 10; text-align: center; width: 85%; transition: opacity 2s; }
         .step { display: none; animation: fadeIn 1s forwards; }
         .active { display: block; }
         
-        /* Стилізація під режими */
+        h1 { font-weight: 200; letter-spacing: 5px; font-size: 16px; margin-bottom: 30px; }
         .theme-deep h1 { color: #0f0; text-shadow: 0 0 10px #0f0; }
         .theme-neon h1 { color: #f0f; text-shadow: 0 0 15px #f0f; }
-        
-        button { background: none; border: 1px solid currentColor; padding: 15px 40px; cursor: pointer; letter-spacing: 3px; font-size: 10px; text-transform: uppercase; color: inherit; transition: 0.3s; }
+        .theme-zen h1 { color: #fa0; text-shadow: 0 0 15px #fa0; }
+
+        .controls { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        button { background: none; border: 1px solid currentColor; padding: 14px 30px; cursor: pointer; letter-spacing: 2px; font-size: 10px; text-transform: uppercase; color: inherit; transition: 0.3s; width: 220px; }
         button:hover { background: rgba(255,255,255,0.1); box-shadow: 0 0 20px currentColor; }
         
-        #exitBtn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; opacity: 0; display: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 20px; font-size: 9px; background: none; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #exitBtn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; opacity: 0; display: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 20px; font-size: 9px; background: none; transition: 3s; cursor: pointer; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="theme-deep" id="bodyTag">
 
 <canvas id="canvas"></canvas>
-<button id="exitBtn" onclick="location.reload()">[ RESET ]</button>
+<button id="exitBtn" onclick="location.reload()">[ REBOOT SYSTEM ]</button>
 
 <div id="intro">
     <div id="s1" class="step active">
-        <h1 id="title">[ SELECT INTERFACE ]</h1>
-        <div class="controls" style="display: flex; gap: 10px; justify-content: center;">
-            <button onclick="setTheme('deep'); initAudioAndGo(1,2)">DEEP (G 25+)</button>
-            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">NEON (Y < 18)</button>
+        <h1>[ SELECT ARCHETYPE ]</h1>
+        <div class="controls">
+            <button onclick="setTheme('deep'); initAudioAndGo(1,2)">01. DEEP (MEDITATIVE)</button>
+            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">02. NEON (DYNAMIC)</button>
+            <button onclick="setTheme('zen'); initAudioAndGo(1,2)">03. ZEN (HARMONY)</button>
         </div>
     </div>
     <div id="s2" class="step">
-        <h1 id="step2Title">[ CALIBRATING ]</h1>
-        <span>Налаштування сенсорів...</span>
+        <h1 id="step2Title">[ CALIBRATING SENSES ]</h1>
         <div class="controls"><button onclick="uiClick(); go(2,3)">PROCEED</button></div>
     </div>
     <div id="s3" class="step">
-        <h1>[ READY ]</h1>
-        <div class="controls"><button id="startBtn" onclick="finalSequence()">LAUNCH</button></div>
+        <h1>[ CONNECTION ESTABLISHED ]</h1>
+        <div class="controls"><button id="startBtn" onclick="finalSequence()">ENTER</button></div>
     </div>
 </div>
 
 <script>
-    const p = new URLSearchParams(window.location.search);
     let currentTheme = 'deep';
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
     let w, h, t = 0, audioCtx, masterGain, flowerAlpha = 0, growth = 0, isLaunched = false;
-    
-    // Елементи для тунелю (Neon) та зірок (Deep)
     const objects = [];
+
     function init() {
         w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
         objects.length = 0;
-        for (let i = 0; i < 400; i++) objects.push({ x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w });
+        for (let i = 0; i < 500; i++) objects.push({ x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w, r: Math.random()*2 });
     }
     window.onresize = init; init();
 
     function setTheme(t) {
         currentTheme = t;
         document.getElementById('bodyTag').className = 'theme-' + t;
-        if(t === 'neon') document.getElementById('title').innerText = '[ NEON DRIVE ]';
     }
 
     function initAudioAndGo(from, to) {
@@ -74,29 +73,40 @@
             masterGain.connect(audioCtx.destination);
             masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
         }
-        go(from, to);
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        uiClick(); go(from, to);
     }
 
     function uiClick() {
-        if (!audioCtx) return;
-        const f = currentTheme === 'deep' ? 440 : 880;
         const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-        o.type = 'square'; o.frequency.value = f;
+        o.type = currentTheme === 'neon' ? 'square' : 'sine';
+        o.frequency.value = currentTheme === 'neon' ? 880 : 440;
         g.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
         o.connect(g); g.connect(audioCtx.destination);
         o.start(); o.stop(audioCtx.currentTime + 0.1);
     }
 
     function startAmbient() {
-        const osc = audioCtx.createOscillator();
-        const filter = audioCtx.createBiquadFilter();
-        osc.type = currentTheme === 'deep' ? 'triangle' : 'sawtooth';
-        osc.frequency.value = currentTheme === 'deep' ? 108 : 55;
-        filter.type = 'lowpass'; filter.frequency.value = 400;
-        osc.connect(filter); filter.connect(masterGain);
-        masterGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 3);
-        osc.start();
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const lfo = audioCtx.createOscillator();
+        const lfoGain = audioCtx.createGain();
+
+        if (currentTheme === 'deep') {
+            osc1.type = 'triangle'; osc1.frequency.value = 108;
+            osc2.type = 'sine'; osc2.frequency.value = 109;
+        } else if (currentTheme === 'neon') {
+            osc1.type = 'sawtooth'; osc1.frequency.value = 55;
+            osc2.type = 'square'; osc2.frequency.value = 110;
+        } else { // Zen
+            osc1.type = 'sine'; osc1.frequency.value = 256; // C4 Note
+            osc2.type = 'sine'; osc2.frequency.value = 384; // G4 Note
+        }
+
+        osc1.connect(masterGain); osc2.connect(masterGain);
+        masterGain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 4);
+        osc1.start(); osc2.start();
     }
 
     function go(from, to) {
@@ -112,48 +122,73 @@
             document.getElementById('intro').style.display = 'none';
             canvas.style.opacity = "1";
             document.getElementById('exitBtn').style.display = 'block';
-            setTimeout(() => document.getElementById('exitBtn').style.opacity = '0.3', 3000);
-        }, 2000);
+            setTimeout(() => document.getElementById('exitBtn').style.opacity = '0.4', 4000);
+        }, 2500);
     }
 
     function render() {
-        ctx.fillStyle = currentTheme === 'deep' ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.4)";
+        // Рівень Motion Blur залежить від теми
+        let bgAlpha = 0.2;
+        if(currentTheme === 'neon') bgAlpha = 0.4;
+        if(currentTheme === 'zen') bgAlpha = 0.1;
+        
+        ctx.fillStyle = `rgba(0,0,0,${bgAlpha})`;
         ctx.fillRect(0, 0, w, h);
 
-        const speed = currentTheme === 'deep' ? 1 : 15;
+        const speed = currentTheme === 'neon' ? 18 : (currentTheme === 'zen' ? 0.3 : 0.8);
+        
         objects.forEach(s => {
             s.z -= speed; if (s.z <= 0) s.z = w;
             const px = (s.x / s.z) * w + w / 2, py = (s.y / s.z) * h + h / 2;
-            ctx.fillStyle = currentTheme === 'deep' ? "#fff" : "#f0f";
+            const size = (1 - s.z/w) * (currentTheme === 'neon' ? 4 : 2);
+            
+            ctx.fillStyle = currentTheme === 'deep' ? '#0f0' : (currentTheme === 'neon' ? '#f0f' : '#fa0');
+            ctx.globalAlpha = (1 - s.z / w);
+            
             ctx.beginPath();
-            if(currentTheme === 'neon') ctx.rect(px, py, (1-s.z/w)*10, 2); // Тунельні лінії
-            else ctx.arc(px, py, (1-s.z/w)*2, 0, Math.PI*2);
-            ctx.fill();
+            if(currentTheme === 'zen') { // Кола на воді
+                ctx.arc(px, py, size * 20 * (1-s.z/w), 0, Math.PI*2);
+                ctx.strokeStyle = ctx.fillStyle; ctx.stroke();
+            } else if(currentTheme === 'neon') { // Квадратні частинки
+                ctx.rect(px, py, size*5, 1); ctx.fill();
+            } else { // Зірки
+                ctx.arc(px, py, size, 0, Math.PI*2); ctx.fill();
+            }
         });
 
         if(isLaunched) {
-            growth = 0.7 + Math.sin(t * (currentTheme === 'deep' ? 0.5 : 2)) * 0.3;
-            if(flowerAlpha < 1) flowerAlpha += 0.01;
+            if(flowerAlpha < 1) flowerAlpha += 0.003;
+            const bSpeed = currentTheme === 'neon' ? 2.5 : 0.5;
+            growth = 0.6 + Math.sin(t * bSpeed) * 0.4;
             
+            // Звукове дихання
+            if(masterGain) masterGain.gain.setTargetAtTime(0.05 + growth*0.1, audioCtx.currentTime, 0.1);
+
             ctx.save();
             ctx.translate(w/2, h/2);
-            const hueBase = currentTheme === 'deep' ? 280 : 320;
-            
-            for(let i=0; i < (currentTheme === 'deep' ? 8 : 12); i++) {
-                ctx.rotate((Math.PI*2)/ (currentTheme === 'deep' ? 8 : 12));
-                ctx.strokeStyle = `hsla(${hueBase + i*10}, 80%, 60%, ${flowerAlpha})`;
-                ctx.lineWidth = currentTheme === 'deep' ? 2 : 4;
+            ctx.rotate(t * (currentTheme === 'neon' ? 0.5 : 0.1));
+
+            const parts = currentTheme === 'neon' ? 12 : (currentTheme === 'zen' ? 6 : 8);
+            for(let i=0; i<parts; i++) {
+                ctx.rotate((Math.PI*2)/parts);
+                ctx.globalAlpha = flowerAlpha * 0.6;
+                ctx.strokeStyle = currentTheme === 'deep' ? '#0f0' : (currentTheme === 'neon' ? '#0ff' : '#fa0');
+                ctx.shadowBlur = 15 * growth; ctx.shadowColor = ctx.strokeStyle;
+                
                 ctx.beginPath();
-                if(currentTheme === 'deep') {
-                    ctx.bezierCurveTo(40*growth, 50*growth, 40*growth, 120*growth, 0, 150*growth);
+                if(currentTheme === 'neon') {
+                    ctx.rect(-2, 20*growth, 4, 120*growth);
+                } else if(currentTheme === 'zen') {
+                    ctx.arc(0, 100*growth, 10, 0, Math.PI*2);
                 } else {
-                    ctx.rect(-5, 20, 10, 100 * growth); // "Енергетичні стержні"
+                    ctx.bezierCurveTo(40*growth, 40*growth, 40*growth, 100*growth, 0, 150*growth);
                 }
                 ctx.stroke();
             }
             ctx.restore();
         }
-        t += 0.02;
+        
+        t += 0.015;
         requestAnimationFrame(render);
     }
 </script>
