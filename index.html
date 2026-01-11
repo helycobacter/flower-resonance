@@ -3,171 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Resonance Master</title>
     <style>
         body { 
-            margin: 0; overflow: hidden; height: 100vh; 
-            background: #000; color: #fff; font-family: 'Segoe UI', sans-serif;
+            margin: 0; overflow: hidden; height: 100vh; background: #000; 
+            color: #fff; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
             display: flex; align-items: center; justify-content: center;
         }
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0; transition: opacity 2s; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0; transition: opacity 3s; }
         
-        /* ЕКРАН ІСТОРІЇ */
-        #intro {
-            position: relative; z-index: 10; max-width: 80%; text-align: center;
-            transition: opacity 1s; padding: 20px;
-        }
-        h1 { font-weight: 200; letter-spacing: 5px; color: rgba(255,255,255,0.9); margin-bottom: 30px; }
-        .logic-item { 
-            margin: 15px 0; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.6);
-            border-left: 1px solid rgba(255,255,255,0.2); padding-left: 15px; text-align: left;
-        }
-        b { color: #fff; font-weight: 400; }
+        #intro { position: relative; z-index: 10; max-width: 85%; text-align: center; }
         
+        h1 { font-weight: 200; letter-spacing: 8px; margin-bottom: 40px; opacity: 0; animation: fadeIn 2s forwards; }
+        .name-highlight { color: #fff; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
+
+        .step { opacity: 0; animation: fadeInSlide 2.5s forwards; margin-bottom: 35px; }
+        .step p { font-size: 16px; letter-spacing: 3px; margin-bottom: 8px; text-transform: uppercase; }
+        .step span { font-size: 13px; color: rgba(255,255,255,0.5); display: block; max-width: 320px; margin: 0 auto; line-height: 1.5; }
+
         #startBtn { 
-            margin-top: 40px; pointer-events: auto; padding: 15px 40px; 
+            opacity: 0; animation: fadeIn 2s forwards; animation-delay: 10s;
+            margin-top: 20px; pointer-events: auto; padding: 18px 45px; 
             background: none; border: 1px solid #fff; color: #fff; 
-            border-radius: 50px; cursor: pointer; letter-spacing: 2px;
-            transition: 0.4s;
+            border-radius: 50px; cursor: pointer; letter-spacing: 3px; font-size: 11px;
+            transition: 0.5s;
         }
-        #startBtn:hover { background: #fff; color: #000; }
-        
-        .visible { opacity: 1 !important; }
+        #startBtn:hover { background: #fff; color: #000; box-shadow: 0 0 30px rgba(255,255,255,0.2); }
+
+        @keyframes fadeInSlide {
+            from { opacity: 0; transform: translateY(15px); filter: blur(8px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div id="intro">
-        <h1>RESONANCE</h1>
+        <h1 id="mainTitle">RESONANCE</h1>
         
-        <div class="logic-item">
-            <b>МАТЕМАТИЧНА МАТРИЦЯ:</b><br>
-            Ваше ім'я перетворено на цифровий код за системою Піфагора. Кількість пелюсток — це ваш вібраційний контур.
+        <div class="step" style="animation-delay: 1.5s;">
+            <p>1. ТІЛЕСНИЙ СПОКІЙ</p>
+            <span>Відчуйте опору під собою. Ваша цифрова мандала будується на частоті вашого імені.</span>
         </div>
         
-        <div class="logic-item">
-            <b>СПЕКТРАЛЬНИЙ АНАЛІЗ:</b><br>
-            Дата народження визначила домінуючу довжину хвилі. Колір квітки — це візуалізація вашої стихії в момент появи.
+        <div class="step" style="animation-delay: 4.5s;">
+            <p>2. РИТМ ДИХАННЯ</p>
+            <span>Зробіть глибокий вдих. Квітка почне морфінг, синхронізуючись із вашим біополем.</span>
         </div>
         
-        <div class="logic-item">
-            <b>АКУСТИЧНИЙ РЕЗОНАНС:</b><br>
-            Згенеровано гармонійний акорд на базі частот 432Гц та вашого індивідуального числа сили.
+        <div class="step" style="animation-delay: 7.5s;">
+            <p>3. ПРИЙНЯТТЯ</p>
+            <span>Ви почуєте гармонійний акорд. Дозвольте звуку пройти крізь вас.</span>
         </div>
 
-        <button id="startBtn">УВІЙТИ В МАТРИЦЮ</button>
+        <button id="startBtn">РОЗПОЧАТИ ДОСВІД</button>
     </div>
     
     <canvas id="canvas"></canvas>
 
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
         const params = new URLSearchParams(window.location.search);
-        
-        // Дані з URL
+        const name = params.get('name') || "USER";
         const hue = parseInt(params.get('hue')) || 280;
         const petals = parseInt(params.get('petals')) || 8;
         const freq = parseInt(params.get('freq')) || 432;
         const element = (params.get('element') || "water").toLowerCase();
 
-        // Стилі стихій
-        const styles = {
-            fire: { h: 10, s: 100, l: 40, speed: 0.03, name: "ВОГОНЬ" },
-            earth: { h: 120, s: 60, l: 25, speed: 0.01, name: "ЗЕМЛЯ" },
-            air: { h: 200, s: 80, l: 60, speed: 0.04, name: "ПОВІТРЯ" },
-            water: { h: 220, s: 70, l: 40, speed: 0.02, name: "ВОДА" }
-        };
-        const stl = styles[element] || styles.water;
+        // Персоналізація заголовка
+        document.getElementById('mainTitle').innerHTML = `RESONANCE: <span class="name-highlight">${name.toUpperCase()}</span>`;
 
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
         let w, h, t = 0;
         const stars = [];
+
+        const stl = {
+            fire:  { h: 10,  speed: 0.035 },
+            earth: { h: 125, speed: 0.015 },
+            air:   { h: 195, speed: 0.045 },
+            water: { h: 225, speed: 0.022 }
+        }[element] || { h: 220, speed: 0.02 };
+
+        document.body.style.background = `radial-gradient(circle at center, hsla(${stl.h}, 70%, 8%, 1) 0%, #000 100%)`;
 
         function init() {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
             stars.length = 0;
-            for(let i=0; i<150; i++) stars.push({x: Math.random()*w, y: Math.random()*h, size: Math.random()*2, speed: Math.random()*0.5+0.1});
+            for(let i=0; i<150; i++) stars.push({x:Math.random()*w, y:Math.random()*h, size:Math.random()*1.8, s:Math.random()*0.6+0.1});
         }
         window.addEventListener('resize', init);
         init();
 
-        function drawPetal(len, width, angle, color, alpha, tip) {
-            ctx.save();
-            ctx.rotate(angle);
-            ctx.shadowBlur = 20; ctx.shadowColor = color;
-            ctx.strokeStyle = color; ctx.globalAlpha = alpha; ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.bezierCurveTo(width, len/3, width, len*0.8, tip, len);
-            ctx.bezierCurveTo(-width, len*0.8, -width, len/3, 0, 0);
-            ctx.stroke();
-            ctx.restore();
+        function drawPetal(len, wid, ang, col, alp, tip) {
+            ctx.save(); ctx.rotate(ang);
+            ctx.shadowBlur = 20; ctx.shadowColor = col; ctx.strokeStyle = col;
+            ctx.globalAlpha = alp; ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.moveTo(0,0);
+            ctx.bezierCurveTo(wid, len/3, wid, len*0.8, tip, len);
+            ctx.bezierCurveTo(-wid, len*0.8, -wid, len/3, 0,0);
+            ctx.stroke(); ctx.restore();
         }
 
         function animate() {
-            ctx.fillStyle = `radial-gradient(circle at center, hsla(${stl.h}, 80%, 10%, 1) 0%, #000 90%)`;
-            // Емуляція градієнту на канвасі
             const g = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w*0.8);
-            g.addColorStop(0, `hsla(${stl.h}, 80%, 7%, 1)`);
-            g.addColorStop(1, "#000");
-            ctx.fillStyle = g;
-            ctx.fillRect(0,0,w,h);
+            g.addColorStop(0, `hsla(${stl.h}, 70%, 7%, 1)`); g.addColorStop(1, "#000");
+            ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
 
-            // Зірки
             ctx.fillStyle = "#fff";
             stars.forEach(s => {
-                ctx.globalAlpha = 0.2 + Math.abs(Math.sin(t + s.x)) * 0.5;
+                ctx.globalAlpha = 0.2 + Math.abs(Math.sin(t + s.x)) * 0.6;
                 ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
-                s.y -= s.speed; if(s.y < 0) s.y = h;
+                s.y -= s.s; if(s.y < 0) s.y = h;
             });
 
-            // Квітка
-            ctx.save();
-            ctx.translate(w/2, h/2);
-            ctx.rotate(t * 0.05);
-            for(let layer = 0; layer < 3; layer++) {
-                const s = 1 - layer*0.25;
+            ctx.save(); ctx.translate(w/2, h/2); ctx.rotate(t * 0.08);
+            for(let l=0; l<3; l++) {
+                const sc = 1 - l*0.25;
                 for(let i=0; i<petals; i++) {
-                    const angle = (Math.PI*2/petals)*i;
-                    const len = (170 + Math.sin(t*2+i+layer)*25)*s;
-                    const wid = (55 + Math.cos(t*3+i)*10)*s;
-                    const tip = Math.sin(t*3+layer+i)*15;
-                    drawPetal(len, wid, angle, `hsla(${hue + layer*15}, 100%, 75%, 1)`, 0.9-layer*0.2, tip);
+                    const ang = (Math.PI*2/petals)*i;
+                    const len = (175 + Math.sin(t*2+i+l)*25)*sc;
+                    const wid = (60 + Math.cos(t*3+i)*12)*sc;
+                    const tip = Math.sin(t*3+l+i)*18;
+                    drawPetal(len, wid, ang, `hsla(${hue + l*15}, 100%, 75%, 1)`, 0.9-l*0.2, tip);
                 }
             }
-            // Ядро
-            ctx.beginPath(); ctx.arc(0, 0, 6+Math.sin(t*4)*2, 0, Math.PI*2);
+            ctx.beginPath(); ctx.arc(0,0, 7+Math.sin(t*4)*2, 0, Math.PI*2);
             ctx.fillStyle = "white"; ctx.shadowBlur = 30; ctx.shadowColor = "white"; ctx.fill();
             ctx.restore();
-
-            t += stl.speed;
-            requestAnimationFrame(animate);
+            t += stl.speed; requestAnimationFrame(animate);
         }
 
-        const btn = document.getElementById('startBtn');
-        btn.addEventListener('click', () => {
+        document.getElementById('startBtn').onclick = () => {
+            document.getElementById('intro').style.transition = 'opacity 2s';
             document.getElementById('intro').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('intro').style.display = 'none';
-                canvas.classList.add('visible');
+                canvas.style.opacity = '1';
                 animate();
-            }, 1000);
+            }, 2000);
 
-            // Звук
             try {
                 const ac = new (window.AudioContext || window.webkitAudioContext)();
-                const master = ac.createGain();
-                master.gain.setValueAtTime(0, ac.currentTime);
-                master.gain.linearRampToValueAtTime(0.15, ac.currentTime + 4);
-                master.connect(ac.destination);
-                const osc = (f, v, type) => {
+                const m = ac.createGain(); m.gain.setValueAtTime(0, ac.currentTime);
+                m.gain.linearRampToValueAtTime(0.15, ac.currentTime + 4); m.connect(ac.destination);
+                const osc = (f, v, ty) => {
                     const o = ac.createOscillator(); const g = ac.createGain();
-                    o.type = type; o.frequency.value = f; g.gain.value = v;
-                    o.connect(g); g.connect(master); o.start();
+                    o.type = ty; o.frequency.value = f; g.gain.value = v;
+                    o.connect(g); g.connect(m); o.start();
                 };
-                osc(freq, 0.6, 'triangle'); osc(freq * 2, 0.3, 'sine'); osc(freq * 1.5, 0.2, 'sine');
-            } catch(e) {}
-        });
+                osc(freq, 0.5, 'triangle'); osc(freq*2, 0.2, 'sine'); osc(freq*1.5, 0.15, 'sine');
+            } catch(e){}
+        };
     </script>
 </body>
 </html>
