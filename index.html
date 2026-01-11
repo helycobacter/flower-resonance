@@ -8,15 +8,24 @@
         body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; }
         canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 6s ease-in-out; z-index: 1; pointer-events: none; }
         
-        #intro { position: relative; z-index: 10; text-align: center; width: 85%; transition: opacity 3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #intro { position: relative; z-index: 10; text-align: center; width: 85%; transition: opacity 3.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .step { display: none; animation: fadeIn 2s forwards; }
         .active { display: block; }
         
         h1 { font-weight: 200; letter-spacing: 7px; font-size: 18px; color: #0f0; text-shadow: 0 0 20px rgba(0,255,0,0.3); text-transform: uppercase; }
         span { color: #555; font-size: 11px; line-height: 2; display: block; max-width: 300px; margin: 25px auto; letter-spacing: 1.5px; text-transform: uppercase; }
         
-        button { background: none; border: 1px solid #0f0; color: #0f0; padding: 15px 45px; border-radius: 2px; cursor: pointer; letter-spacing: 4px; font-size: 10px; transition: 0.8s; text-transform: uppercase; }
+        button { background: none; border: 1px solid #0f0; color: #0f0; padding: 15px 45px; border-radius: 2px; cursor: pointer; letter-spacing: 4px; font-size: 10px; transition: 0.8s; text-transform: uppercase; outline: none; }
         button:hover { background: rgba(0, 255, 0, 0.1); box-shadow: 0 0 30px rgba(0, 255, 0, 0.4); border-color: #fff; color: #fff; }
+
+        /* Непомітна кнопка виходу */
+        #exitBtn { 
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            z-index: 100; opacity: 0; display: none; transition: opacity 3s;
+            border: 1px solid rgba(0, 255, 0, 0.2); color: rgba(0, 255, 0, 0.2);
+            padding: 8px 20px; font-size: 9px; letter-spacing: 2px;
+        }
+        #exitBtn:hover { border-color: rgba(255, 255, 255, 0.5); color: #fff; opacity: 1 !important; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -24,6 +33,7 @@
 <body>
 
 <canvas id="canvas"></canvas>
+<button id="exitBtn" onclick="location.reload()">[ ПОКИНУТИ ГЛИБИНУ ]</button>
 
 <div id="intro">
     <div id="s1" class="step active">
@@ -41,7 +51,7 @@
     <div id="s3" class="step">
         <h1>[ PHASE 03: ETERNITY ]</h1>
         <span>Резонанс досяг піку.<br>Ви готові побачити істину?</span>
-        <div class="controls"><button id="startBtn" onclick="deepDiveSound()">ЗАНУРИТИСЯ</button></div>
+        <div class="controls"><button id="startBtn" onclick="finalSequence()">ЗАНУРИТИСЯ</button></div>
     </div>
 </div>
 
@@ -70,7 +80,6 @@
     window.onmousemove = e => { mouse.x = (e.clientX - w/2)*0.02; mouse.y = (e.clientY - h/2)*0.02; };
     init();
 
-    // Звичайний клік інтерфейсу
     function uiClick() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const o = audioCtx.createOscillator(), g = audioCtx.createGain();
@@ -82,48 +91,56 @@
         o.start(); o.stop(audioCtx.currentTime + 0.2);
     }
 
-    // ОСОБЛИВИЙ ЗВУК ФІНАЛУ
-    function deepDiveSound() {
+    function finalSequence() {
         const now = audioCtx.currentTime;
         
-        // 1. Глибокий Sub-Bass (фундамент)
+        // Глибокий Sub-Bass
         const sub = audioCtx.createOscillator();
-        const subGain = audioCtx.createGain();
+        const subG = audioCtx.createGain();
         sub.frequency.setValueAtTime(freq / 4, now);
-        subGain.gain.setValueAtTime(0, now);
-        subGain.gain.linearRampToValueAtTime(0.4, now + 1);
-        subGain.gain.exponentialRampToValueAtTime(0.001, now + 6);
-        sub.connect(subGain); subGain.connect(audioCtx.destination);
-        sub.start(); sub.stop(now + 6);
+        subG.gain.setValueAtTime(0, now);
+        subG.gain.linearRampToValueAtTime(0.4, now + 1.5);
+        subG.gain.exponentialRampToValueAtTime(0.001, now + 8);
+        sub.connect(subG); subG.connect(audioCtx.destination);
+        sub.start(); sub.stop(now + 8);
 
-        // 2. Визхідний ефірний тон
-        const shimmer = audioCtx.createOscillator();
-        const shimGain = audioCtx.createGain();
-        shimmer.type = 'triangle';
-        shimmer.frequency.setValueAtTime(freq, now);
-        shimmer.frequency.exponentialRampToValueAtTime(freq * 2, now + 5);
-        shimGain.gain.setValueAtTime(0, now);
-        shimGain.gain.linearRampToValueAtTime(0.1, now + 2);
-        shimGain.gain.linearRampToValueAtTime(0, now + 6);
-        shimmer.connect(shimGain); shimGain.connect(audioCtx.destination);
-        shimmer.start(); shimmer.stop(now + 6);
+        // Визхідний ефірний тон
+        const shim = audioCtx.createOscillator();
+        const shimG = audioCtx.createGain();
+        shim.type = 'triangle';
+        shim.frequency.setValueAtTime(freq, now);
+        shim.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 6);
+        shimG.gain.setValueAtTime(0, now);
+        shimG.gain.linearRampToValueAtTime(0.08, now + 3);
+        shimG.gain.linearRampToValueAtTime(0, now + 8);
+        shim.connect(shimG); shimG.connect(audioCtx.destination);
+        shim.start(); shim.stop(now + 8);
+
+        // Анімація інтерфейсу
+        document.getElementById('intro').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('intro').style.display = 'none';
+            canvas.style.opacity = "1";
+            // Поява кнопки Exit
+            const exit = document.getElementById('exitBtn');
+            exit.style.display = 'block';
+            setTimeout(() => { exit.style.opacity = '0.3'; }, 5000);
+        }, 3500);
     }
 
     function go(from, to) {
         document.getElementById('s'+from).classList.remove('active');
         document.getElementById('s'+to).classList.add('active');
         if(to === 2) { canvas.style.opacity = "0.4"; render(); }
-        if(to === 3) startAmbient();
-    }
-
-    function startAmbient() {
-        master = audioCtx.createGain();
-        master.gain.setValueAtTime(0, audioCtx.currentTime);
-        master.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 4);
-        master.connect(audioCtx.destination);
-        const o = audioCtx.createOscillator();
-        o.frequency.value = freq / 2;
-        o.connect(master); o.start();
+        if(to === 3) {
+            master = audioCtx.createGain();
+            master.gain.setValueAtTime(0, audioCtx.currentTime);
+            master.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 4);
+            master.connect(audioCtx.destination);
+            const o = audioCtx.createOscillator();
+            o.frequency.value = freq / 2;
+            o.connect(master); o.start();
+        }
     }
 
     function drawPetal(len, wid, ang, col, alp) {
@@ -140,49 +157,39 @@
         ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
         ctx.fillRect(0, 0, w, h);
 
-        // Ефірні зірки (дуже повільно)
         ctx.fillStyle = "#fff";
         stars.forEach(s => {
-            s.z -= 0.8; 
+            s.z -= 0.6; 
             if (s.z <= 0) s.z = w;
             const px = (s.x / s.z) * w + w / 2;
             const py = (s.y / s.z) * h + h / 2;
-            ctx.globalAlpha = (1 - s.z / w) * 0.5;
-            ctx.beginPath(); ctx.arc(px, py, (1 - s.z/w)*1.5, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = (1 - s.z / w) * 0.4;
+            ctx.beginPath(); ctx.arc(px, py, (1 - s.z/w)*1.2, 0, Math.PI*2); ctx.fill();
         });
 
         if(document.getElementById('intro').style.display === 'none') {
-            if (flowerAlpha < 1) flowerAlpha += 0.003; // Поява за ~10 секунд (330 кадрів)
+            if (flowerAlpha < 1) flowerAlpha += 0.002; // Ще повільніше
             
             ctx.save();
             ctx.translate(w/2 + mouse.x, h/2 + mouse.y);
-            const pulse = 1 + Math.sin(t * 0.5) * 0.02; 
+            const pulse = 1 + Math.sin(t * 0.4) * 0.02; 
             ctx.scale(pulse, pulse);
-            ctx.rotate(t * 0.08); // Гіпнотично повільно
+            ctx.rotate(t * 0.06); 
             
             for(let l=0; l<3; l++) {
                 const sc = 1 - l*0.25;
                 for(let i=0; i<petals; i++) {
                     const ang = (Math.PI*2/petals)*i;
-                    const len = (140 + Math.sin(t*0.5+i)*10) * sc;
+                    const len = (140 + Math.sin(t*0.4+i)*10) * sc;
                     drawPetal(len, 40*sc, ang, `hsla(${hue+l*20},100%,75%,1)`, 0.6-l*0.2);
                 }
             }
             ctx.restore();
         }
         
-        t += 0.01; 
+        t += 0.008; 
         requestAnimationFrame(render);
     }
-
-    document.getElementById('startBtn').onclick = function() {
-        deepDiveSound();
-        document.getElementById('intro').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('intro').style.display = 'none';
-            canvas.style.opacity = "1";
-        }, 3000);
-    };
 </script>
 </body>
-</html>І
+</html>
