@@ -3,133 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DeepTown: Muted Ritual</title>
+    <title>DeepTown: Enhanced</title>
     <style>
         body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; }
         canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 5s ease-in-out; z-index: 1; pointer-events: none; }
-        
-        #intro { position: relative; z-index: 10; text-align: center; width: 85%; transition: opacity 3s; }
+        #intro { position: relative; z-index: 10; text-align: center; width: 85%; transition: opacity 2s; }
         .step { display: none; animation: fadeIn 2s forwards; }
         .active { display: block; }
-        
-        h1 { font-weight: 200; letter-spacing: 7px; font-size: 18px; color: #0f0; text-shadow: 0 0 15px rgba(0,255,0,0.2); text-transform: uppercase; }
-        span { color: #444; font-size: 11px; line-height: 2; display: block; max-width: 300px; margin: 25px auto; letter-spacing: 1.5px; }
-        
-        button { background: none; border: 1px solid rgba(0,255,0,0.4); color: #0f0; padding: 15px 45px; border-radius: 2px; cursor: pointer; letter-spacing: 4px; font-size: 10px; transition: 0.8s; text-transform: uppercase; }
-        button:hover { background: rgba(0, 255, 0, 0.05); border-color: #fff; color: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.1); }
-
-        #exitBtn { 
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            z-index: 100; opacity: 0; display: none; transition: opacity 3s;
-            border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.2);
-            padding: 8px 20px; font-size: 9px; letter-spacing: 2px; background: none;
-        }
-        #exitBtn:hover { color: #fff; border-color: #fff; opacity: 1 !important; }
-
+        h1 { font-weight: 200; letter-spacing: 7px; font-size: 18px; color: #0f0; text-shadow: 0 0 15px rgba(0,255,0,0.2); }
+        span { color: #555; font-size: 11px; line-height: 2; display: block; max-width: 300px; margin: 25px auto; letter-spacing: 1.5px; }
+        button { background: none; border: 1px solid rgba(0,255,0,0.5); color: #0f0; padding: 15px 45px; cursor: pointer; letter-spacing: 4px; font-size: 10px; transition: 0.5s; text-transform: uppercase; }
+        #exitBtn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; opacity: 0; display: none; transition: 3s; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); padding: 8px 20px; font-size: 9px; background: none; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <canvas id="canvas"></canvas>
-<button id="exitBtn" onclick="location.reload()">[ EXIT DEPTH ]</button>
+<button id="exitBtn" onclick="location.reload()">[ EXIT ]</button>
 
 <div id="intro">
     <div id="s1" class="step active">
-        <h1>[ PHASE 01: ORIGIN ]</h1>
-        <span>Глибина-глибина, я не твій...<br>Синхронізація вхідного шлюзу.</span>
+        <h1>[ PHASE 01 ]</h1>
+        <span>Глибина-глибина, я не твій...</span>
         <div class="controls"><button onclick="uiClick(); go(1,2)">CONTINUE</button></div>
     </div>
     <div id="s2" class="step">
-        <h1>[ PHASE 02: ADAPTATION ]</h1>
-        <span>Зоровий спектр адаптується.<br>Зменшення опору реальності.</span>
+        <h1>[ PHASE 02 ]</h1>
+        <span>Адаптація слухового та зорового каналів.</span>
         <div class="controls"><button onclick="uiClick(); go(2,3)">PROCEED</button></div>
     </div>
     <div id="s3" class="step">
-        <h1>[ PHASE 03: ETERNITY ]</h1>
-        <span>Матриця стабілізована.<br>Готові до занурення?</span>
+        <h1>[ PHASE 03 ]</h1>
+        <span>Резонанс встановлено.</span>
         <div class="controls"><button id="startBtn" onclick="finalSequence()">ENTER</button></div>
     </div>
 </div>
 
 <script>
     const p = new URLSearchParams(window.location.search);
-    const name = p.get('name') || "DIVER";
-    const hue = parseInt(p.get('hue')) || 280;
-    const petals = parseInt(p.get('petals')) || 8;
-    const freq = parseInt(p.get('freq')) || 432;
-    const elem = (p.get('element') || "water").toLowerCase();
-
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+    const hue = parseInt(p.get('hue')) || 280, petals = parseInt(p.get('petals')) || 8, freq = parseInt(p.get('freq')) || 432;
+    const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
     let w, h, t = 0, mouse = {x: 0, y: 0}, audioCtx, master, flowerAlpha = 0;
     
+    // Більше зірок (600)
     const stars = [];
-    function createStar() { return { x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w }; }
+    function createStar() { return { x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w, o: Math.random() }; }
 
     function init() {
-        w = canvas.width = window.innerWidth;
-        h = canvas.height = window.innerHeight;
-        stars.length = 0;
-        for (let i = 0; i < 200; i++) stars.push(createStar());
+        w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
+        stars.length = 0; for (let i = 0; i < 600; i++) stars.push(createStar());
     }
     window.onresize = init;
-    window.onmousemove = e => { mouse.x = (e.clientX - w/2)*0.015; mouse.y = (e.clientY - h/2)*0.015; };
+    window.onmousemove = e => { mouse.x = (e.clientX - w/2)*0.01; mouse.y = (e.clientY - h/2)*0.01; };
     init();
+
+    // Покращений звук для мобільних (додавання гармонік)
+    function createOsc(f, type, gainValue, startTime, duration) {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = type; o.frequency.setValueAtTime(f, startTime);
+        g.gain.setValueAtTime(gainValue, startTime);
+        g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(startTime + duration);
+    }
 
     function uiClick() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-        o.frequency.setValueAtTime(400, audioCtx.currentTime);
-        o.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
-        g.gain.setValueAtTime(0.02, audioCtx.currentTime);
-        g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(audioCtx.currentTime + 0.3);
+        createOsc(600, 'sine', 0.1, audioCtx.currentTime, 0.2);
     }
 
     function finalSequence() {
         const now = audioCtx.currentTime;
-        const sub = audioCtx.createOscillator();
-        const subG = audioCtx.createGain();
-        sub.frequency.setValueAtTime(freq / 4, now);
-        subG.gain.setValueAtTime(0, now);
-        subG.gain.linearRampToValueAtTime(0.3, now + 2);
-        subG.gain.exponentialRampToValueAtTime(0.001, now + 10);
-        sub.connect(subG); subG.connect(audioCtx.destination);
-        sub.start(); sub.stop(now + 10);
-
+        // Потужний акорд занурення
+        createOsc(freq/2, 'triangle', 0.3, now, 6); // Фундамент
+        createOsc(freq, 'sine', 0.2, now, 4);       // Основний тон
+        createOsc(freq*1.5, 'sine', 0.1, now, 3);   // Гармоніка для гучності
+        
         document.getElementById('intro').style.opacity = '0';
         setTimeout(() => {
             document.getElementById('intro').style.display = 'none';
             canvas.style.opacity = "1";
-            const exit = document.getElementById('exitBtn');
-            exit.style.display = 'block';
-            setTimeout(() => { exit.style.opacity = '0.2'; }, 6000);
+            document.getElementById('exitBtn').style.display = 'block';
+            setTimeout(() => { document.getElementById('exitBtn').style.opacity = '0.3'; }, 5000);
         }, 3000);
     }
 
     function go(from, to) {
         document.getElementById('s'+from).classList.remove('active');
         document.getElementById('s'+to).classList.add('active');
-        if(to === 2) { canvas.style.opacity = "0.3"; render(); }
-        if(to === 3 && !master) {
-            master = audioCtx.createGain();
-            master.gain.setValueAtTime(0, audioCtx.currentTime);
-            master.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 5);
-            master.connect(audioCtx.destination);
-            const o = audioCtx.createOscillator(); o.frequency.value = freq / 2; o.connect(master); o.start();
-        }
+        if(to === 2) { canvas.style.opacity = "0.4"; render(); }
     }
 
     function drawPetal(len, wid, ang, col, alp) {
         ctx.save(); ctx.rotate(ang);
-        // Знижена яскравість через прозорість та тонші лінії
-        ctx.strokeStyle = col; 
-        ctx.globalAlpha = alp * flowerAlpha * 0.5; // М'якший пік
-        ctx.lineWidth = 1.2;
-        ctx.shadowBlur = 25; 
-        ctx.shadowColor = col;
+        ctx.strokeStyle = col; ctx.globalAlpha = alp * flowerAlpha * 0.4;
+        ctx.lineWidth = 1.5; ctx.shadowBlur = 20; ctx.shadowColor = col;
         ctx.beginPath(); ctx.moveTo(0,0);
         ctx.bezierCurveTo(wid, len/3, wid, len*0.8, 0, len);
         ctx.bezierCurveTo(-wid, len*0.8, -wid, len/3, 0,0);
@@ -137,45 +106,34 @@
     }
 
     function render() {
-        ctx.fillStyle = "black";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.2)"; // Motion blur для зірок
         ctx.fillRect(0, 0, w, h);
 
         ctx.fillStyle = "#fff";
         stars.forEach(s => {
-            s.z -= 0.5; if (s.z <= 0) s.z = w;
-            const px = (s.x / s.z) * w + w / 2;
-            const py = (s.y / s.z) * h + h / 2;
-            ctx.globalAlpha = (1 - s.z / w) * 0.3;
-            ctx.beginPath(); ctx.arc(px, py, (1 - s.z/w)*1.1, 0, Math.PI*2); ctx.fill();
+            s.z -= 1.2; if (s.z <= 0) s.z = w;
+            const px = (s.x / s.z) * w + w / 2, py = (s.y / s.z) * h + h / 2;
+            const size = (1 - s.z/w) * 1.5;
+            ctx.globalAlpha = (1 - s.z / w) * 0.6;
+            ctx.beginPath(); ctx.arc(px, py, size, 0, Math.PI*2); ctx.fill();
         });
 
         if(document.getElementById('intro').style.display === 'none') {
-            if (flowerAlpha < 1) flowerAlpha += 0.002;
-            
-            ctx.save();
-            ctx.translate(w/2 + mouse.x, h/2 + mouse.y);
-            
-            // Складніша динаміка - пульсація + легке коливання масштабу
-            const breathe = Math.sin(t * 0.6);
-            const scale = 1 + breathe * 0.04;
-            ctx.scale(scale, scale);
-            ctx.rotate(t * 0.15); // Трохи швидше обертання для динаміки
-            
+            if (flowerAlpha < 1) flowerAlpha += 0.003;
+            ctx.save(); ctx.translate(w/2 + mouse.x, h/2 + mouse.y);
+            const scale = 1 + Math.sin(t * 0.6) * 0.03;
+            ctx.scale(scale, scale); ctx.rotate(t * 0.1);
             for(let l=0; l<3; l++) {
                 const sc = 1 - l*0.25;
                 for(let i=0; i<petals; i++) {
                     const ang = (Math.PI*2/petals)*i;
-                    // Пелюстки тепер "грають" довжиною індивідуально
-                    const len = (145 + Math.sin(t*1.2 + i)*15) * sc;
-                    const wid = (45 + Math.cos(t + i)*10) * sc;
-                    drawPetal(len, wid, ang, `hsla(${hue+l*15}, 80%, 65%, 1)`, 0.5 - l*0.1);
+                    const len = (150 + Math.sin(t*1.5 + i)*15) * sc;
+                    drawPetal(len, 45*sc, ang, `hsla(${hue+l*15}, 80%, 60%, 1)`, 0.5 - l*0.1);
                 }
             }
             ctx.restore();
         }
-        
-        t += 0.012; 
-        requestAnimationFrame(render);
+        t += 0.015; requestAnimationFrame(render);
     }
 </script>
 </body>
