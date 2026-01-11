@@ -3,22 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DeepTown: Refined Ritual</title>
+    <title>DeepTown: Sacred Archetypes</title>
     <style>
         body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; }
-        canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 3s; z-index: 1; }
+        canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 2s; z-index: 1; }
         #intro { position: absolute; z-index: 10; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; background: black; transition: 1s; }
         .step { display: none; width: 90%; }
         .active { display: block; animation: fadeIn 0.8s; }
-        
-        #log { position: absolute; bottom: 15px; left: 15px; font-size: 8px; z-index: 5; pointer-events: none; text-align: left; line-height: 1.2; opacity: 0.4; max-width: 150px; }
-        
+        #log { position: absolute; bottom: 15px; left: 15px; font-size: 8px; z-index: 5; pointer-events: none; text-align: left; opacity: 0.5; max-width: 150px; }
         h1 { font-weight: 200; letter-spacing: 3px; font-size: 11px; margin-bottom: 20px; text-transform: uppercase; }
         button { background: none; border: 1px solid currentColor; padding: 8px 16px; cursor: pointer; letter-spacing: 1px; font-size: 8px; color: inherit; transition: 0.2s; margin: 4px; text-transform: uppercase; }
-        
-        #exitBtn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: none; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); padding: 5px 10px; font-size: 7px; background: none; cursor: pointer; opacity: 0.2; }
-        #exitBtn:hover { opacity: 0.7; color: #fff; }
-
+        #exitBtn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: none; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); padding: 5px 10px; font-size: 7px; background: none; cursor: pointer; opacity: 0.2; transition: 0.5s; }
+        #exitBtn:hover { opacity: 0.8; color: #fff; }
         .theme-deep { color: #0f0; } .theme-neon { color: #0ff; } .theme-zen { color: #fa0; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -34,7 +30,7 @@
         <h1>ACCESS_POINT</h1>
         <div class="controls">
             <button onclick="setTheme('deep'); initAudioAndGo(1,2)">DEEP_SPIRAL</button>
-            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">NEON_FLOW</button>
+            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">NEON_KOLO</button>
             <button onclick="setTheme('zen'); initAudioAndGo(1,2)">ZEN_FLOWER</button>
         </div>
     </div>
@@ -50,7 +46,7 @@
 
 <script>
     const p = new URLSearchParams(window.location.search);
-    const uHue = parseInt(p.get('hue')) || 280, uPetals = parseInt(p.get('petals')) || 8, uFreq = parseInt(p.get('freq')) || 432;
+    const uHue = parseInt(p.get('hue')) || 280, uPetals = 8, uFreq = parseInt(p.get('freq')) || 432;
 
     let currentTheme = 'deep', audioCtx, masterGain, isLaunched = false, t = 0, flowerAlpha = 0;
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d'), logEl = document.getElementById('log');
@@ -66,48 +62,28 @@
         const div = document.createElement('div');
         div.innerText = `> ${msg}`;
         logEl.appendChild(div);
-        if (logEl.childNodes.length > 4) logEl.removeChild(logEl.firstChild);
+        if (logEl.childNodes.length > 5) logEl.removeChild(logEl.firstChild);
     }
 
-    function setTheme(t) {
-        currentTheme = t; document.body.className = 'theme-' + t;
-        addLog(`SYS_${t.toUpperCase()}_INIT`);
-    }
-
-    function playSoftModem() {
-        const now = audioCtx.currentTime;
-        const g = audioCtx.createGain();
-        g.gain.setValueAtTime(0.02, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-        
-        // М'який шум замість різкої пилки
-        const bufferSize = audioCtx.sampleRate * 1.2;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
-
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass'; filter.frequency.value = 800;
-
-        noise.connect(filter); filter.connect(g); g.connect(audioCtx.destination);
-        noise.start();
+    function setTheme(theme) {
+        currentTheme = theme; document.body.className = 'theme-' + theme;
+        addLog(`SYS_${theme.toUpperCase()}_OK`);
     }
 
     function initAudioAndGo(from, to) {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination);
+            masterGain = audioCtx.createGain();
+            masterGain.connect(audioCtx.destination);
+            masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
         }
-        if (currentTheme === 'neon') playSoftModem();
         go(from, to);
     }
 
     function uiClick() {
         const o = audioCtx.createOscillator(), g = audioCtx.createGain();
         o.type = 'sine'; o.frequency.value = uFreq;
-        g.gain.setValueAtTime(0.03, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.05, audioCtx.currentTime);
         g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
         o.connect(g); g.connect(audioCtx.destination);
         o.start(); o.stop(audioCtx.currentTime + 0.1);
@@ -117,11 +93,12 @@
         document.getElementById('s'+from).classList.remove('active');
         document.getElementById('s'+to).classList.add('active');
         if(to === 2) {
-            canvas.style.opacity = "0.4";
+            canvas.style.opacity = "0.5";
             const osc = audioCtx.createOscillator();
-            osc.type = 'sine'; osc.frequency.value = uFreq / 6;
+            osc.type = 'sine';
+            osc.frequency.value = uFreq / 6;
             osc.connect(masterGain);
-            masterGain.gain.setTargetAtTime(0.08, audioCtx.currentTime, 2);
+            masterGain.gain.setTargetAtTime(0.12, audioCtx.currentTime, 1);
             osc.start();
             render();
         }
@@ -137,59 +114,72 @@
         }, 1200);
     }
 
+    function drawShape(len, ang, col, alp) {
+        ctx.save();
+        ctx.rotate(ang);
+        ctx.strokeStyle = col;
+        ctx.globalAlpha = alp * flowerAlpha;
+        ctx.lineWidth = currentTheme === 'neon' ? 2 : 1.2;
+        ctx.shadowBlur = currentTheme === 'neon' ? 15 : 5;
+        ctx.shadowColor = col;
+        
+        ctx.beginPath();
+        if (currentTheme === 'zen') {
+            // Повернення класичної пелюстки-краплі
+            ctx.bezierCurveTo(35, len*0.3, 35, len*0.7, 0, len);
+            ctx.bezierCurveTo(-35, len*0.7, -35, len*0.3, 0, 0);
+        } else if (currentTheme === 'deep') {
+            // Повернення спіралей
+            ctx.arc(0, len/2, len/2, 0, Math.PI * 1.2);
+        } else { 
+            // NEON КОЛОВРАТ (Sacred Geometry)
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, len);
+            ctx.lineTo(len * 0.4, len); // Загин променя під кутом
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
     function render() {
-        ctx.fillStyle = `rgba(0,0,0,${currentTheme === 'neon' ? 0.25 : 0.15})`;
+        ctx.fillStyle = `rgba(0,0,0,${currentTheme === 'neon' ? 0.3 : 0.15})`;
         ctx.fillRect(0, 0, w, h);
 
-        const speed = currentTheme === 'neon' ? 15 : (currentTheme === 'zen' ? 0.3 : 0.8);
+        const speed = currentTheme === 'neon' ? 18 : (currentTheme === 'zen' ? 0.4 : 1.2);
         objects.forEach(s => {
             s.z -= speed; if (s.z <= 0) s.z = w;
             const px = (s.x / s.z) * w + w / 2, py = (s.y / s.z) * h + h / 2;
-            ctx.globalAlpha = (1 - s.z/w) * 0.8;
+            ctx.globalAlpha = (1 - s.z/w);
             ctx.fillStyle = currentTheme === 'neon' ? '#0ff' : (currentTheme === 'zen' ? '#fa0' : '#0f0');
             ctx.beginPath();
-            if (currentTheme === 'neon') ctx.rect(px, py, (1-s.z/w)*6, 1);
+            if (currentTheme === 'neon') ctx.rect(px, py, (1-s.z/w)*10, 1);
             else ctx.arc(px, py, (1-s.z/w)*1.5, 0, Math.PI*2);
             ctx.fill();
         });
 
         if (isLaunched) {
             if (flowerAlpha < 1) flowerAlpha += 0.005;
-            // Плавна пульсація без ривків
-            const smoothGrowth = 0.7 + Math.cos(t * (currentTheme === 'neon' ? 1.2 : 0.5)) * 0.3;
+            const growth = 0.6 + Math.sin(t * (currentTheme === 'neon' ? 1.5 : 0.6)) * 0.4;
             
-            ctx.save(); ctx.translate(w/2, h/2);
-            ctx.rotate(t * (currentTheme === 'neon' ? 0.15 : 0.05)); // Повільніше обертання
-            
-            if (currentTheme === 'neon') ctx.filter = `blur(${Math.abs(Math.sin(t))*4}px)`;
+            ctx.save();
+            ctx.translate(w/2, h/2);
+            ctx.rotate(t * (currentTheme === 'neon' ? 0.6 : 0.1)); // Коловрат крутиться швидше
+
+            if (currentTheme === 'neon') ctx.filter = `blur(${Math.max(0, Math.sin(t*2)*3)}px)`;
 
             for(let l=0; l<3; l++) {
-                const sc = 1 - l*0.2;
-                const pCount = currentTheme === 'neon' ? uPetals + 4 : uPetals;
-                for(let i=0; i<pCount; i++) {
-                    const ang = (Math.PI*2/pCount)*i;
-                    ctx.save(); ctx.rotate(ang);
-                    ctx.strokeStyle = `hsla(${uHue + l*15}, 80%, 60%, 1)`;
-                    ctx.globalAlpha = (0.6 - l*0.15) * flowerAlpha;
-                    ctx.lineWidth = 1;
-                    
-                    ctx.beginPath();
-                    const cl = 140 * sc * smoothGrowth;
-                    if (currentTheme === 'zen') {
-                        ctx.bezierCurveTo(30, cl*0.2, 60, cl*0.5, 0, cl);
-                    } else if (currentTheme === 'deep') {
-                        ctx.arc(0, cl/2, cl/4, 0, Math.PI);
-                    } else { // Neon Flow
-                        ctx.moveTo(0, 20); ctx.lineTo(0, cl);
-                        ctx.moveTo(3, 40); ctx.lineTo(3, cl * 0.6);
-                    }
-                    ctx.stroke(); ctx.restore();
+                const sc = 1 - l*0.25;
+                for(let i=0; i<uPetals; i++) {
+                    const ang = (Math.PI*2/uPetals)*i;
+                    const col = `hsla(${uHue + l*20}, 80%, 60%, 1)`;
+                    drawShape(150*sc*growth, ang, col, 0.7 - l*0.2);
                 }
             }
             ctx.restore();
             ctx.filter = 'none';
+            if (t % 2 < 0.02) addLog(currentTheme === 'neon' ? "SOLAR_FLOW_ACTIVE" : "PULSE_STABLE");
         }
-        t += 0.01; // Зменшено крок часу для плавності
+        t += 0.015;
         requestAnimationFrame(render);
     }
 </script>
