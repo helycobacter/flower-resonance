@@ -3,60 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DeepTown: Breathing Bloom</title>
+    <title>DeepTown: Multiverse</title>
     <style>
         body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; }
-        canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 5s ease-in-out; z-index: 1; pointer-events: none; }
-        #intro { position: relative; z-index: 10; text-align: center; width: 85%; transition: opacity 2s; }
-        .step { display: none; animation: fadeIn 1.5s forwards; }
+        canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 4s ease-in-out; z-index: 1; pointer-events: none; }
+        #intro { position: relative; z-index: 10; text-align: center; width: 85%; }
+        .step { display: none; animation: fadeIn 1s forwards; }
         .active { display: block; }
-        h1 { font-weight: 200; letter-spacing: 5px; font-size: 18px; color: #0f0; text-shadow: 0 0 10px rgba(0,255,0,0.3); }
-        span { color: #555; font-size: 11px; line-height: 2; display: block; max-width: 300px; margin: 25px auto; letter-spacing: 1px; }
-        button { background: none; border: 1px solid rgba(0,255,0,0.5); color: #0f0; padding: 15px 45px; cursor: pointer; letter-spacing: 3px; font-size: 10px; text-transform: uppercase; outline: none; }
-        #exitBtn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; opacity: 0; display: none; transition: 3s; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); padding: 8px 20px; font-size: 9px; background: none; }
+        
+        /* Стилізація під режими */
+        .theme-deep h1 { color: #0f0; text-shadow: 0 0 10px #0f0; }
+        .theme-neon h1 { color: #f0f; text-shadow: 0 0 15px #f0f; }
+        
+        button { background: none; border: 1px solid currentColor; padding: 15px 40px; cursor: pointer; letter-spacing: 3px; font-size: 10px; text-transform: uppercase; color: inherit; transition: 0.3s; }
+        button:hover { background: rgba(255,255,255,0.1); box-shadow: 0 0 20px currentColor; }
+        
+        #exitBtn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; opacity: 0; display: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 20px; font-size: 9px; background: none; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body>
+<body class="theme-deep" id="bodyTag">
 
 <canvas id="canvas"></canvas>
-<button id="exitBtn" onclick="location.reload()">[ EXIT ]</button>
+<button id="exitBtn" onclick="location.reload()">[ RESET ]</button>
 
 <div id="intro">
     <div id="s1" class="step active">
-        <h1>[ PHASE 01 ]</h1>
-        <span>Глибина-глибина, я не твій...</span>
-        <div class="controls"><button onclick="initAudioAndGo(1,2)">CONTINUE</button></div>
+        <h1 id="title">[ SELECT INTERFACE ]</h1>
+        <div class="controls" style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="setTheme('deep'); initAudioAndGo(1,2)">DEEP (G 25+)</button>
+            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">NEON (Y < 18)</button>
+        </div>
     </div>
     <div id="s2" class="step">
-        <h1>[ PHASE 02 ]</h1>
-        <span>Калібрування дихання системи.</span>
+        <h1 id="step2Title">[ CALIBRATING ]</h1>
+        <span>Налаштування сенсорів...</span>
         <div class="controls"><button onclick="uiClick(); go(2,3)">PROCEED</button></div>
     </div>
     <div id="s3" class="step">
-        <h1>[ PHASE 03 ]</h1>
-        <span>Синхронізація завершена.</span>
-        <div class="controls"><button id="startBtn" onclick="finalSequence()">ENTER</button></div>
+        <h1>[ READY ]</h1>
+        <div class="controls"><button id="startBtn" onclick="finalSequence()">LAUNCH</button></div>
     </div>
 </div>
 
 <script>
     const p = new URLSearchParams(window.location.search);
-    const hue = parseInt(p.get('hue')) || 280, petals = parseInt(p.get('petals')) || 8, freq = parseInt(p.get('freq')) || 432;
+    let currentTheme = 'deep';
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
-    let w, h, t = 0, mouse = {x: 0, y: 0}, audioCtx, masterGain, flowerAlpha = 0, growth = 0;
-    let isDeep = false;
-
-    const stars = [];
-    function createStar() { return { x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w }; }
-
+    let w, h, t = 0, audioCtx, masterGain, flowerAlpha = 0, growth = 0, isLaunched = false;
+    
+    // Елементи для тунелю (Neon) та зірок (Deep)
+    const objects = [];
     function init() {
         w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
-        stars.length = 0; for (let i = 0; i < 600; i++) stars.push(createStar());
+        objects.length = 0;
+        for (let i = 0; i < 400; i++) objects.push({ x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w });
     }
-    window.onresize = init;
-    window.onmousemove = e => { mouse.x = (e.clientX - w/2)*0.01; mouse.y = (e.clientY - h/2)*0.01; };
-    init();
+    window.onresize = init; init();
+
+    function setTheme(t) {
+        currentTheme = t;
+        document.getElementById('bodyTag').className = 'theme-' + t;
+        if(t === 'neon') document.getElementById('title').innerText = '[ NEON DRIVE ]';
+    }
 
     function initAudioAndGo(from, to) {
         if (!audioCtx) {
@@ -65,112 +74,86 @@
             masterGain.connect(audioCtx.destination);
             masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
         }
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        uiClick(); go(from, to);
+        go(from, to);
     }
 
-    function createOsc(f, type, vol, duration) {
+    function uiClick() {
+        if (!audioCtx) return;
+        const f = currentTheme === 'deep' ? 440 : 880;
         const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-        o.type = type; o.frequency.setValueAtTime(f, audioCtx.currentTime);
-        g.gain.setValueAtTime(vol * 0.5, audioCtx.currentTime); // Зменшено гучність кнопок
-        g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+        o.type = 'square'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
         o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(audioCtx.currentTime + duration);
+        o.start(); o.stop(audioCtx.currentTime + 0.1);
     }
-
-    function uiClick() { if (audioCtx) createOsc(440, 'sine', 0.1, 0.2); }
 
     function startAmbient() {
-        // Складний звук для мобільних: поєднання двох хвиль
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
+        const osc = audioCtx.createOscillator();
         const filter = audioCtx.createBiquadFilter();
-
-        osc1.type = 'triangle'; osc1.frequency.setValueAtTime(freq / 2, audioCtx.currentTime);
-        osc2.type = 'sine'; osc2.frequency.setValueAtTime(freq / 2 + 2, audioCtx.currentTime); // Легкий розлив
-        
-        filter.type = 'lowpass'; filter.frequency.setValueAtTime(400, audioCtx.currentTime);
-
-        osc1.connect(filter); osc2.connect(filter);
-        filter.connect(masterGain);
-        
-        osc1.start(); osc2.start();
-    }
-
-    function finalSequence() {
-        uiClick();
-        isDeep = true;
-        document.getElementById('intro').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('intro').style.display = 'none';
-            canvas.style.opacity = "1";
-            document.getElementById('exitBtn').style.display = 'block';
-            setTimeout(() => { document.getElementById('exitBtn').style.opacity = '0.2'; }, 5000);
-        }, 3000);
+        osc.type = currentTheme === 'deep' ? 'triangle' : 'sawtooth';
+        osc.frequency.value = currentTheme === 'deep' ? 108 : 55;
+        filter.type = 'lowpass'; filter.frequency.value = 400;
+        osc.connect(filter); filter.connect(masterGain);
+        masterGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 3);
+        osc.start();
     }
 
     function go(from, to) {
         document.getElementById('s'+from).classList.remove('active');
         document.getElementById('s'+to).classList.add('active');
-        if(to === 2) { canvas.style.opacity = "0.4"; render(); startAmbient(); }
+        if(to === 2) { canvas.style.opacity = "0.5"; startAmbient(); render(); }
     }
 
-    function drawPetal(len, wid, ang, col, alp) {
-        ctx.save(); ctx.rotate(ang);
-        ctx.strokeStyle = col;
-        ctx.globalAlpha = alp * flowerAlpha * 0.45;
-        ctx.lineWidth = 1.3; ctx.shadowBlur = 15 * growth; ctx.shadowColor = col;
-
-        const currentLen = len * growth;
-        const currentWid = wid * growth;
-
-        ctx.beginPath(); ctx.moveTo(0, 0);
-        ctx.bezierCurveTo(currentWid, currentLen / 3, currentWid, currentLen * 0.8, 0, currentLen);
-        ctx.bezierCurveTo(-currentWid, currentLen * 0.8, -currentWid, currentLen / 3, 0, 0);
-        ctx.stroke(); ctx.restore();
+    function finalSequence() {
+        uiClick(); isLaunched = true;
+        document.getElementById('intro').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('intro').style.display = 'none';
+            canvas.style.opacity = "1";
+            document.getElementById('exitBtn').style.display = 'block';
+            setTimeout(() => document.getElementById('exitBtn').style.opacity = '0.3', 3000);
+        }, 2000);
     }
 
     function render() {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+        ctx.fillStyle = currentTheme === 'deep' ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.4)";
         ctx.fillRect(0, 0, w, h);
-        
-        ctx.fillStyle = "#fff";
-        stars.forEach(s => {
-            s.z -= 0.8; if (s.z <= 0) s.z = w;
+
+        const speed = currentTheme === 'deep' ? 1 : 15;
+        objects.forEach(s => {
+            s.z -= speed; if (s.z <= 0) s.z = w;
             const px = (s.x / s.z) * w + w / 2, py = (s.y / s.z) * h + h / 2;
-            ctx.globalAlpha = (1 - s.z / w) * 0.4;
-            ctx.beginPath(); ctx.arc(px, py, (1 - s.z/w)*1.2, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = currentTheme === 'deep' ? "#fff" : "#f0f";
+            ctx.beginPath();
+            if(currentTheme === 'neon') ctx.rect(px, py, (1-s.z/w)*10, 2); // Тунельні лінії
+            else ctx.arc(px, py, (1-s.z/w)*2, 0, Math.PI*2);
+            ctx.fill();
         });
 
-        if(isDeep || flowerAlpha > 0) {
-            // ФАЗА ДИХАННЯ
-            // growth тепер циклічно коливається між 0.35 та 1.0
-            const breathSpeed = 0.4; // Швидкість дихання
-            growth = 0.65 + Math.sin(t * breathSpeed) * 0.35;
+        if(isLaunched) {
+            growth = 0.7 + Math.sin(t * (currentTheme === 'deep' ? 0.5 : 2)) * 0.3;
+            if(flowerAlpha < 1) flowerAlpha += 0.01;
             
-            if (isDeep && flowerAlpha < 1) flowerAlpha += 0.002;
-
-            // Синхронізація звуку з диханням квітки
-            if (masterGain) {
-                const targetGain = 0.05 + (growth * 0.15); // Від 0.05 до 0.20
-                masterGain.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.1);
-            }
-
             ctx.save();
-            ctx.translate(w/2 + mouse.x, h/2 + mouse.y);
-            ctx.rotate(t * 0.06);
-
-            for(let l=0; l<3; l++) {
-                const sc = 1 - l * 0.25;
-                for(let i=0; i<petals; i++) {
-                    const ang = (Math.PI * 2 / petals) * i;
-                    const dynamicLen = (140 + Math.sin(t * 1.0 + i) * 10) * sc;
-                    drawPetal(dynamicLen, 40 * sc, ang, `hsla(${hue + l * 15}, 75%, 65%, 1)`, 0.5 - l * 0.1);
+            ctx.translate(w/2, h/2);
+            const hueBase = currentTheme === 'deep' ? 280 : 320;
+            
+            for(let i=0; i < (currentTheme === 'deep' ? 8 : 12); i++) {
+                ctx.rotate((Math.PI*2)/ (currentTheme === 'deep' ? 8 : 12));
+                ctx.strokeStyle = `hsla(${hueBase + i*10}, 80%, 60%, ${flowerAlpha})`;
+                ctx.lineWidth = currentTheme === 'deep' ? 2 : 4;
+                ctx.beginPath();
+                if(currentTheme === 'deep') {
+                    ctx.bezierCurveTo(40*growth, 50*growth, 40*growth, 120*growth, 0, 150*growth);
+                } else {
+                    ctx.rect(-5, 20, 10, 100 * growth); // "Енергетичні стержні"
                 }
+                ctx.stroke();
             }
             ctx.restore();
         }
-        t += 0.01;
+        t += 0.02;
         requestAnimationFrame(render);
     }
 </script>
