@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DeepTown: Archetype Rituals</title>
+    <title>DeepTown: The Ritual</title>
     <style>
         body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; }
         canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 3s; z-index: 1; }
@@ -11,26 +11,27 @@
         .step { display: none; width: 85%; }
         .active { display: block; animation: fadeIn 0.8s; }
         
-        h1 { font-weight: 200; letter-spacing: 5px; font-size: 16px; margin-bottom: 30px; }
-        .theme-deep h1 { color: #0f0; text-shadow: 0 0 10px #0f0; }
-        .theme-neon h1 { color: #0ff; text-shadow: 0 0 15px #0ff; }
-        .theme-zen h1 { color: #fa0; text-shadow: 0 0 15px #fa0; }
-
+        #log { position: absolute; bottom: 20px; left: 20px; font-size: 10px; z-index: 5; pointer-events: none; text-align: left; line-height: 1.4; opacity: 0.6; }
+        
         button { background: none; border: 1px solid currentColor; padding: 12px 25px; cursor: pointer; letter-spacing: 2px; font-size: 10px; color: inherit; transition: 0.2s; margin: 10px; text-transform: uppercase; }
         button:hover { background: rgba(255,255,255,0.1); box-shadow: 0 0 15px currentColor; }
         
-        #exitBtn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; opacity: 0; display: none; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 10px 20px; font-size: 9px; background: rgba(0,0,0,0.5); transition: 1s; }
+        #exitBtn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; display: none; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.4); padding: 8px 15px; font-size: 8px; background: none; transition: 0.5s; cursor: pointer; opacity: 0.2; }
+        #exitBtn:hover { opacity: 0.8; border-color: #fff; color: #fff; }
+
+        .theme-deep { color: #0f0; } .theme-neon { color: #0ff; } .theme-zen { color: #fa0; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="theme-deep">
 
 <canvas id="canvas"></canvas>
-<button id="exitBtn" onclick="location.reload()">[ RECONNECT SYSTEM ]</button>
+<div id="log"></div>
+<button id="exitBtn" onclick="location.reload()">[ RECONNECT_SYSTEM ]</button>
 
 <div id="intro">
     <div id="s1" class="step active">
-        <h1 id="userGreeting">ACCESSING SYSTEM...</h1>
+        <h1 id="userGreeting">INITIALIZING...</h1>
         <div class="controls">
             <button onclick="setTheme('deep'); initAudioAndGo(1,2)">DEEP_SPIRAL</button>
             <button onclick="setTheme('neon'); initAudioAndGo(1,2)">NEON_RAYS</button>
@@ -38,12 +39,12 @@
         </div>
     </div>
     <div id="s2" class="step">
-        <h1>[ CALIBRATING SENSES ]</h1>
+        <h1>[ SENSE_CALIBRATION ]</h1>
         <button onclick="uiClick(); go(2,3)">SYNC</button>
     </div>
     <div id="s3" class="step">
-        <h1>[ CONNECTION ESTABLISHED ]</h1>
-        <button onclick="finalSequence()">ENTER</button>
+        <h1>[ LINK_READY ]</h1>
+        <button onclick="finalSequence()">EXECUTE</button>
     </div>
 </div>
 
@@ -52,46 +53,37 @@
     const uName = p.get('name') || "DIVER", uHue = parseInt(p.get('hue')) || 280, 
           uPetals = parseInt(p.get('petals')) || 8, uFreq = parseInt(p.get('freq')) || 432;
 
-    document.getElementById('userGreeting').innerText = `WELCOME, ${uName.toUpperCase()}`;
-
     let currentTheme = 'deep', audioCtx, masterGain, isLaunched = false, t = 0, flowerAlpha = 0, growth = 0;
-    const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+    const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d'), logEl = document.getElementById('log');
     let w, h, objects = [];
 
     function init() {
         w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
-        objects = [];
-        for (let i = 0; i < 400; i++) objects.push({ x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w });
+        objects = []; for (let i = 0; i < 400; i++) objects.push({ x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w });
     }
     window.onresize = init; init();
 
-    function setTheme(t) {
-        currentTheme = t;
-        document.body.className = 'theme-' + t;
+    function addLog(msg) {
+        const div = document.createElement('div');
+        div.innerText = `> ${msg}`;
+        logEl.appendChild(div);
+        if (logEl.childNodes.length > 6) logEl.removeChild(logEl.firstChild);
     }
 
-    function playModemHandshake() {
-        const now = audioCtx.currentTime;
-        const bufferSize = audioCtx.sampleRate * 1.5;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
-        const noiseGain = audioCtx.createGain();
-        noiseGain.gain.setValueAtTime(0.02, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-        noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
-        noise.start();
+    function setTheme(t) {
+        currentTheme = t; document.body.className = 'theme-' + t;
+        addLog(`MODULE_${t.toUpperCase()}_LOADED`);
+    }
 
-        [600, 1200, 800, 1600, 1000].forEach((f, i) => {
-            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-            o.type = 'square'; o.frequency.setValueAtTime(f, now + i*0.2);
-            g.gain.setValueAtTime(0.03, now + i*0.2);
-            g.gain.exponentialRampToValueAtTime(0.001, now + i*0.2 + 0.2);
-            o.connect(g); g.connect(audioCtx.destination);
-            o.start(now + i*0.2); o.stop(now + i*0.2 + 0.2);
-        });
+    function playModem() {
+        if(!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        osc.type = 'square'; osc.frequency.setValueAtTime(1200, now);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.5);
+        g.gain.setValueAtTime(0.05, now); g.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(now + 0.5);
     }
 
     function initAudioAndGo(from, to) {
@@ -100,9 +92,8 @@
             masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination);
             masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
         }
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        if (currentTheme === 'neon') playModemHandshake();
-        uiClick(); go(from, to);
+        if (currentTheme === 'neon') playModem();
+        go(from, to);
     }
 
     function uiClick() {
@@ -117,89 +108,91 @@
     function go(from, to) {
         document.getElementById('s'+from).classList.remove('active');
         document.getElementById('s'+to).classList.add('active');
+        addLog(`PHASE_0${to}_SYNC...`);
         if(to === 2) {
             canvas.style.opacity = "0.5";
             const osc = audioCtx.createOscillator();
             osc.type = currentTheme === 'neon' ? 'sawtooth' : 'triangle';
             osc.frequency.value = uFreq / 4;
             osc.connect(masterGain);
-            masterGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 4);
+            masterGain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 5);
             osc.start();
             render();
         }
     }
 
     function finalSequence() {
-        uiClick(); isLaunched = true;
+        addLog("DECRYPTING_REALITY...");
+        isLaunched = true;
         document.getElementById('intro').style.opacity = '0';
         setTimeout(() => {
             document.getElementById('intro').style.display = 'none';
             canvas.style.opacity = "1";
             document.getElementById('exitBtn').style.display = 'block';
-            document.getElementById('exitBtn').style.opacity = '0.5';
         }, 1500);
     }
 
-    // ГОЛОВНА ФУНКЦІЯ МАЛЮВАННЯ ЦЕНТРАЛЬНОГО ЕЛЕМЕНТА
-    function drawCentralElement(len, wid, ang, col, alp) {
+    function drawElement(len, wid, ang, col, alp) {
         ctx.save(); ctx.rotate(ang);
         ctx.strokeStyle = col; ctx.globalAlpha = alp * flowerAlpha;
-        ctx.shadowBlur = 15 * growth; ctx.shadowColor = col;
-
-        const currentLen = len * growth;
-        const currentWid = wid * growth;
+        ctx.shadowBlur = 10 * growth; ctx.shadowColor = col;
+        const cl = len * growth; const cw = wid * growth;
 
         ctx.beginPath();
-        if (currentTheme === 'zen') { // Квітка (форма краплі)
+        if (currentTheme === 'zen') {
+            ctx.lineWidth = 1.2;
+            ctx.bezierCurveTo(cw, cl*0.2, cw*1.5, cl*0.5, 0, cl);
+            ctx.bezierCurveTo(-cw*1.5, cl*0.5, -cw, cl*0.2, 0, 0);
+        } else if (currentTheme === 'deep') {
+            ctx.lineWidth = 2;
+            ctx.arc(0, cl/2, cl/3, t, t + Math.PI);
+        } else { // Neon Rays 2.0 - Більш деталізовані промені
             ctx.lineWidth = 1.5;
-            ctx.bezierCurveTo(currentWid, currentLen*0.2, currentWid*2, currentLen*0.5, 0, currentLen);
-            ctx.bezierCurveTo(-currentWid*2, currentLen*0.5, -currentWid, currentLen*0.2, 0,0);
-        } else if (currentTheme === 'deep') { // Спіралі
-            ctx.lineWidth = 2.5;
-            ctx.arc(0, 0, currentLen / 2, t * 2, t * 2 + Math.PI/2);
-            ctx.lineTo(0, currentLen); // Додаткова лінія, щоб спіраль не була розірвана
-        } else { // Neon: Промені
-            ctx.lineWidth = 3.5;
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, currentLen + Math.sin(t*10)*5); // Довжина променя з легким коливанням
+            ctx.moveTo(0, 30 * growth);
+            ctx.lineTo(0, cl);
+            ctx.moveTo(cw/4, 50 * growth);
+            ctx.lineTo(cw/4, cl * 0.7); // Подвійний промінь для складності
         }
         ctx.stroke(); ctx.restore();
     }
 
     function render() {
-        ctx.fillStyle = `rgba(0,0,0,${currentTheme === 'neon' ? 0.4 : 0.15})`;
+        ctx.fillStyle = `rgba(0,0,0,${currentTheme === 'neon' ? 0.35 : 0.15})`;
         ctx.fillRect(0, 0, w, h);
 
-        const speed = currentTheme === 'neon' ? 22 : (currentTheme === 'zen' ? 0.3 : 0.9);
+        const speed = currentTheme === 'neon' ? 20 : (currentTheme === 'zen' ? 0.4 : 1);
         objects.forEach(s => {
             s.z -= speed; if (s.z <= 0) s.z = w;
             const px = (s.x / s.z) * w + w / 2, py = (s.y / s.z) * h + h / 2;
-            const size = (1 - s.z/w) * (currentTheme === 'neon' ? 4 : 2);
             ctx.globalAlpha = (1 - s.z/w);
-            ctx.fillStyle = currentTheme === 'neon' ? '#0ff' : (currentTheme === 'zen' ? '#fa0' : '#0f0');
+            ctx.fillStyle = document.body.className === 'theme-neon' ? '#0ff' : (document.body.className === 'theme-zen' ? '#fa0' : '#0f0');
             ctx.beginPath();
-            if (currentTheme === 'neon') ctx.rect(px, py, size*6, 1);
-            else ctx.arc(px, py, size, 0, Math.PI*2);
+            if (currentTheme === 'neon') ctx.rect(px, py, (1-s.z/w)*10, 1);
+            else ctx.arc(px, py, (1-s.z/w)*2, 0, Math.PI*2);
             ctx.fill();
         });
 
         if (isLaunched) {
             if (flowerAlpha < 1) flowerAlpha += 0.005;
-            growth = 0.6 + Math.sin(t * (currentTheme === 'neon' ? 2.5 : 0.6)) * 0.4;
+            growth = 0.6 + Math.sin(t * (currentTheme === 'neon' ? 2 : 0.6)) * 0.4;
             
             ctx.save(); ctx.translate(w/2, h/2);
-            ctx.rotate(t * (currentTheme === 'neon' ? 0.4 : 0.08));
+            ctx.rotate(t * (currentTheme === 'neon' ? 0.3 : 0.1));
             
-            for(let l=0; l<3; l++) { // 3 шари для складності
+            for(let l=0; l<3; l++) {
                 const sc = 1 - l*0.25;
-                const totalParts = currentTheme === 'neon' ? uPetals + 4 : uPetals; // Більше променів для неону
-                for(let i=0; i<totalParts; i++) {
-                    const ang = (Math.PI*2/totalParts)*i;
+                const pCount = currentTheme === 'neon' ? uPetals + 10 : uPetals;
+                for(let i=0; i<pCount; i++) {
+                    const ang = (Math.PI*2/pCount)*i;
                     const col = `hsla(${uHue + l*20}, 80%, ${currentTheme === 'zen' ? 70 : 60}%, 1)`;
-                    drawCentralElement(150*sc, 45*sc, ang, col, 0.6 - l*0.15);
+                    drawElement(160*sc, 40*sc, ang, col, 0.6 - l*0.15);
                 }
             }
             ctx.restore();
+            if (t % 1 < 0.02) {
+                if(currentTheme === 'neon') addLog("RECV_PKT_" + Math.random().toString(16).slice(2,6));
+                if(currentTheme === 'zen') addLog("ZEN_STATE_STABLE");
+            }
         }
         t += 0.015; requestAnimationFrame(render);
     }
