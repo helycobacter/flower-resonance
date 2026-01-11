@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DeepTown: The Final Archetypes</title>
+    <title>DeepTown: Archetype Rituals</title>
     <style>
         body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; }
         canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 3s; z-index: 1; }
@@ -32,9 +32,9 @@
     <div id="s1" class="step active">
         <h1 id="userGreeting">ACCESSING SYSTEM...</h1>
         <div class="controls">
-            <button onclick="setTheme('deep'); initAudioAndGo(1,2)">DEEP_RESONANCE</button>
-            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">NEON_TUNNEL</button>
-            <button onclick="setTheme('zen'); initAudioAndGo(1,2)">ZEN_GARDEN</button>
+            <button onclick="setTheme('deep'); initAudioAndGo(1,2)">DEEP_SPIRAL</button>
+            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">NEON_RAYS</button>
+            <button onclick="setTheme('zen'); initAudioAndGo(1,2)">ZEN_FLOWER</button>
         </div>
     </div>
     <div id="s2" class="step">
@@ -70,10 +70,8 @@
         document.body.className = 'theme-' + t;
     }
 
-    // СКЛАДНИЙ ЗВУК МОДЕМА (Noise + Tones)
     function playModemHandshake() {
         const now = audioCtx.currentTime;
-        // 1. Білий шум (шипіння)
         const bufferSize = audioCtx.sampleRate * 1.5;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -86,7 +84,6 @@
         noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
         noise.start();
 
-        // 2. Хаотичні тони
         [600, 1200, 800, 1600, 1000].forEach((f, i) => {
             const o = audioCtx.createOscillator(), g = audioCtx.createGain();
             o.type = 'square'; o.frequency.setValueAtTime(f, now + i*0.2);
@@ -105,7 +102,7 @@
         }
         if (audioCtx.state === 'suspended') audioCtx.resume();
         if (currentTheme === 'neon') playModemHandshake();
-        go(from, to);
+        uiClick(); go(from, to);
     }
 
     function uiClick() {
@@ -143,24 +140,33 @@
         }, 1500);
     }
 
-    function drawPetal(len, wid, ang, col, alp) {
+    // ГОЛОВНА ФУНКЦІЯ МАЛЮВАННЯ ЦЕНТРАЛЬНОГО ЕЛЕМЕНТА
+    function drawCentralElement(len, wid, ang, col, alp) {
         ctx.save(); ctx.rotate(ang);
         ctx.strokeStyle = col; ctx.globalAlpha = alp * flowerAlpha;
-        ctx.lineWidth = currentTheme === 'neon' ? 2.5 : 1.5;
         ctx.shadowBlur = 15 * growth; ctx.shadowColor = col;
-        ctx.beginPath(); ctx.moveTo(0,0);
-        if (currentTheme === 'zen') { // Форма краплі
-            ctx.bezierCurveTo(wid*growth, len*0.2*growth, wid*2*growth, len*0.5*growth, 0, len*growth);
-            ctx.bezierCurveTo(-wid*2*growth, len*0.5*growth, -wid*growth, len*0.2*growth, 0,0);
-        } else { // Класична пелюстка
-            ctx.bezierCurveTo(wid*growth, len/3*growth, wid*growth, len*0.8*growth, 0, len*growth);
-            ctx.bezierCurveTo(-wid*growth, len*0.8*growth, -wid*growth, len/3*growth, 0,0);
+
+        const currentLen = len * growth;
+        const currentWid = wid * growth;
+
+        ctx.beginPath();
+        if (currentTheme === 'zen') { // Квітка (форма краплі)
+            ctx.lineWidth = 1.5;
+            ctx.bezierCurveTo(currentWid, currentLen*0.2, currentWid*2, currentLen*0.5, 0, currentLen);
+            ctx.bezierCurveTo(-currentWid*2, currentLen*0.5, -currentWid, currentLen*0.2, 0,0);
+        } else if (currentTheme === 'deep') { // Спіралі
+            ctx.lineWidth = 2.5;
+            ctx.arc(0, 0, currentLen / 2, t * 2, t * 2 + Math.PI/2);
+            ctx.lineTo(0, currentLen); // Додаткова лінія, щоб спіраль не була розірвана
+        } else { // Neon: Промені
+            ctx.lineWidth = 3.5;
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, currentLen + Math.sin(t*10)*5); // Довжина променя з легким коливанням
         }
         ctx.stroke(); ctx.restore();
     }
 
     function render() {
-        // Рівень Motion Blur: Neon - високий, Zen - низький
         ctx.fillStyle = `rgba(0,0,0,${currentTheme === 'neon' ? 0.4 : 0.15})`;
         ctx.fillRect(0, 0, w, h);
 
@@ -184,12 +190,13 @@
             ctx.save(); ctx.translate(w/2, h/2);
             ctx.rotate(t * (currentTheme === 'neon' ? 0.4 : 0.08));
             
-            for(let l=0; l<3; l++) {
+            for(let l=0; l<3; l++) { // 3 шари для складності
                 const sc = 1 - l*0.25;
-                for(let i=0; i<uPetals; i++) {
-                    const ang = (Math.PI*2/uPetals)*i;
+                const totalParts = currentTheme === 'neon' ? uPetals + 4 : uPetals; // Більше променів для неону
+                for(let i=0; i<totalParts; i++) {
+                    const ang = (Math.PI*2/totalParts)*i;
                     const col = `hsla(${uHue + l*20}, 80%, ${currentTheme === 'zen' ? 70 : 60}%, 1)`;
-                    drawPetal(150*sc, 45*sc, ang, col, 0.6 - l*0.15);
+                    drawCentralElement(150*sc, 45*sc, ang, col, 0.6 - l*0.15);
                 }
             }
             ctx.restore();
