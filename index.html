@@ -1,65 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Resonance Final</title>
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
-        .step { display: none; padding: 20px; }
+        body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 2s; pointer-events: none; z-index: 1; }
+        #intro { position: relative; z-index: 10; text-align: center; width: 85%; }
+        .step { display: none; animation: fadeIn 0.8s forwards; min-height: 150px; }
         .active { display: block; }
-        button { padding: 15px 30px; margin-top: 20px; cursor: pointer; background: #fff; border: none; border-radius: 20px; font-weight: bold; }
-        canvas { position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; transition: 2s; }
+        h1 { font-weight: 200; letter-spacing: 5px; font-size: 22px; margin-bottom: 20px; }
+        span { color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6; display: block; max-width: 300px; margin: 0 auto; }
+        .controls { margin-top: 30px; }
+        button { background: none; border: 1px solid #fff; color: #fff; padding: 15px 40px; border-radius: 50px; cursor: pointer; letter-spacing: 2px; font-size: 11px; transition: 0.3s; }
+        button:hover { background: #fff; color: #000; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div id="intro">
-        <div id="s1" class="step active"><h1>КРОК 1</h1><p>Математика імені...</p><button onclick="next(1)">ДАЛІ</button></div>
-        <div id="s2" class="step"><h1>КРОК 2</h1><p>Спектр дати...</p><button onclick="next(2)">ДАЛІ</button></div>
-        <div id="s3" class="step"><h1>КРОК 3</h1><p>Готовність...</p><button id="startBtn">ЗАПУСТИТИ</button></div>
+<canvas id="canvas"></canvas>
+
+<div id="intro">
+    <div id="s1" class="step active">
+        <h1 id="t1">МАТРИЦЯ ГЕОМЕТРІЇ</h1>
+        <span>Ваше ім'я перетворено на цифровий код. Кількість пелюсток — це ваш вібраційний контур.</span>
+        <div class="controls"><button onclick="go(1,2)">ДАЛІ</button></div>
     </div>
+    
+    <div id="s2" class="step">
+        <h1>СПЕКТРАЛЬНИЙ АНАЛІЗ</h1>
+        <span>Колір квітки — це візуалізація вашої стихії та частоти вашого біополя.</span>
+        <div class="controls"><button onclick="go(2,3)">ДАЛІ</button></div>
+    </div>
+    
+    <div id="s3" class="step">
+        <h1>АКУСТИЧНИЙ РЕЗОНАНС</h1>
+        <span>Активація частоти 432Гц для синхронізації ваших ритмів.</span>
+        <div class="controls"><button id="startBtn">УВІЙТИ</button></div>
+    </div>
+</div>
 
-    <canvas id="canvas"></canvas>
+<script>
+    // Налаштування з URL
+    const p = new URLSearchParams(window.location.search);
+    const name = p.get('name') || "USER";
+    const hue = parseInt(p.get('hue')) || 280;
+    const petals = parseInt(p.get('petals')) || 8;
+    const freq = parseInt(p.get('freq')) || 432;
+    const elem = (p.get('element') || "water").toLowerCase();
 
-    <script>
-        // Проста логіка перемикання
-        function next(num) {
-            document.getElementById('s'+num).classList.remove('active');
-            document.getElementById('s'+(num+1)).classList.add('active');
+    document.getElementById('t1').innerText = name.toUpperCase();
+
+    // Механіка кроків
+    function go(from, to) {
+        document.getElementById('s'+from).classList.remove('active');
+        document.getElementById('s'+to).classList.add('active');
+    }
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let w, h, t = 0;
+    const stl = { fire:{h:10,s:0.04}, earth:{h:120,s:0.015}, air:{h:190,s:0.05}, water:{h:220,s:0.02} }[elem] || {h:220,s:0.02};
+
+    function init() { w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
+    window.onresize = init; init();
+
+    function drawPetal(len, wid, ang, col, alp) {
+        ctx.save(); ctx.rotate(ang);
+        ctx.strokeStyle = col; ctx.globalAlpha = alp; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0,0);
+        ctx.bezierCurveTo(wid, len/3, wid, len*0.8, 0, len);
+        ctx.bezierCurveTo(-wid, len*0.8, -wid, len/3, 0,0);
+        ctx.stroke(); ctx.restore();
+    }
+
+    function animate() {
+        ctx.fillStyle = `rgba(0,0,0,0.1)`;
+        ctx.fillRect(0,0,w,h);
+        ctx.save(); ctx.translate(w/2, h/2); ctx.rotate(t*0.05);
+        for(let l=0; l<3; l++) {
+            const sc = 1 - l*0.25;
+            for(let i=0; i<petals; i++) {
+                drawPetal(160*sc + Math.sin(t*2)*10, 50*sc, (Math.PI*2/petals)*i, `hsla(${hue+l*15},100%,70%,1)`, 0.8-l*0.2);
+            }
         }
+        ctx.restore(); t += stl.s; requestAnimationFrame(animate);
+    }
 
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const startBtn = document.getElementById('startBtn');
-
-        // Запуск фіналу
-        startBtn.addEventListener('click', function() {
-            document.getElementById('intro').style.display = 'none';
-            canvas.style.opacity = '1';
-            
-            // Запуск анімації
-            setInterval(() => {
-                ctx.fillStyle = 'black';
-                ctx.fillRect(0,0, canvas.width, canvas.height);
-                ctx.fillStyle = 'white';
-                ctx.beginPath();
-                ctx.arc(canvas.width/2, canvas.height/2, 50 + Math.sin(Date.now()*0.005)*20, 0, Math.PI*2);
-                ctx.fill();
-            }, 16);
-
-            // Запуск звуку
-            try {
-                const ac = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ac.createOscillator();
-                osc.connect(ac.destination);
-                osc.start();
-                setTimeout(() => osc.stop(), 2000);
-            } catch(e) { console.log(e); }
-        });
-
-        // Ресайз
-        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-        window.onresize();
-    </script>
+    document.getElementById('startBtn').onclick = function() {
+        document.getElementById('intro').style.display = 'none';
+        canvas.style.opacity = '1';
+        animate();
+        
+        try {
+            const ac = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ac.createOscillator();
+            const g = ac.createGain();
+            osc.frequency.value = freq;
+            g.gain.setValueAtTime(0, ac.currentTime);
+            g.gain.linearRampToValueAtTime(0.2, ac.currentTime + 2);
+            osc.connect(g); g.connect(ac.destination);
+            osc.start();
+        } catch(e) {}
+    };
+</script>
 </body>
 </html>
