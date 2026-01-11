@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Resonance Final Edition</title>
+    <title>Resonance: Sequential Activation</title>
     <style>
         body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; }
-        canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 2s; pointer-events: none; z-index: 1; }
+        canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 2.5s ease; pointer-events: none; z-index: 1; }
         
-        #intro { position: relative; z-index: 10; text-align: center; width: 85%; }
-        .step { display: none; animation: fadeIn 0.8s forwards; min-height: 160px; }
+        #intro { position: relative; z-index: 10; text-align: center; width: 85%; transition: opacity 1.2s; }
+        .step { display: none; animation: fadeIn 1s forwards; min-height: 160px; }
         .active { display: block; }
         
-        h1 { font-weight: 200; letter-spacing: 6px; font-size: 22px; margin-bottom: 20px; }
+        h1 { font-weight: 200; letter-spacing: 6px; font-size: 22px; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
         .name-highlight { border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 2px; }
-        span { color: rgba(255,255,255,0.5); font-size: 13px; line-height: 1.6; display: block; max-width: 300px; margin: 0 auto; }
+        span { color: rgba(255,255,255,0.5); font-size: 13px; line-height: 1.7; display: block; max-width: 320px; margin: 0 auto; letter-spacing: 0.5px; }
         
-        .controls { margin-top: 35px; }
-        button { background: none; border: 1px solid #fff; color: #fff; padding: 14px 40px; border-radius: 50px; cursor: pointer; letter-spacing: 2px; font-size: 11px; transition: 0.3s; }
-        button:hover { background: #fff; color: #000; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .controls { margin-top: 40px; }
+        button { background: none; border: 1px solid #fff; color: #fff; padding: 16px 45px; border-radius: 50px; cursor: pointer; letter-spacing: 2px; font-size: 11px; transition: 0.4s; outline: none; }
+        button:hover { background: #fff; color: #000; box-shadow: 0 0 25px rgba(255,255,255,0.3); }
         
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -30,25 +30,25 @@
 <div id="intro">
     <div id="s1" class="step active">
         <h1>RESONANCE: <span id="userName" class="name-highlight">...</span></h1>
-        <span>КРОК 1: Ваше ім'я перетворено на цифровий код за системою Піфагора. Кількість пелюсток — це ваш вібраційний контур.</span>
+        <span>КРОК 1: Ініціалізація числового коду. Ваша персональна матриця будується на базі частот вашого імені.</span>
         <div class="controls"><button onclick="go(1,2)">ДАЛІ</button></div>
     </div>
     
     <div id="s2" class="step">
         <h1>СПЕКТРАЛЬНИЙ АНАЛІЗ</h1>
-        <span>КРОК 2: Колір квітки та частота мерехтіння зірок — це візуалізація вашої стихії та біополя.</span>
+        <span>КРОК 2: Активація зорового спектру. Зірки та колір фону синхронізуються з вашою стихією.</span>
         <div class="controls"><button onclick="go(2,3)">ДАЛІ</button></div>
     </div>
     
     <div id="s3" class="step">
         <h1>АКУСТИЧНИЙ РЕЗОНАНС</h1>
-        <span>КРОК 3: Активація частоти 432Гц для повної синхронізації ваших ритмів.</span>
+        <span>КРОК 3: Підключення аудіо-потоку. Частота 432Гц готується до резонансу з вашими біоритмами.</span>
         <div class="controls"><button id="startBtn">УВІЙТИ В МАТРИЦЮ</button></div>
     </div>
 </div>
 
 <script>
-    // Параметри
+    // 1. Отримання параметрів
     const p = new URLSearchParams(window.location.search);
     const name = p.get('name') || "МАНДРІВНИК";
     const hue = parseInt(p.get('hue')) || 280;
@@ -58,18 +58,17 @@
 
     document.getElementById('userName').innerText = name.toUpperCase();
 
-    // Надійна механіка перемикання
-    function go(from, to) {
-        document.getElementById('s'+from).classList.remove('active');
-        document.getElementById('s'+to).classList.add('active');
-    }
-
-    // Графіка
+    // 2. Налаштування графіки
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let w, h, t = 0;
+    let w, h, t = 0, isActive = false, audioCtx, masterGain;
     const stars = [];
-    const stl = { fire:{h:10,s:0.035}, earth:{h:120,s:0.015}, air:{h:190,s:0.05}, water:{h:220,s:0.022} }[elem] || {h:220,s:0.022};
+    const stl = { 
+        fire:  {h: 10,  s: 0.035}, 
+        earth: {h: 125, s: 0.015}, 
+        air:   {h: 195, s: 0.045}, 
+        water: {h: 225, s: 0.022} 
+    }[elem] || {h: 225, s: 0.022};
 
     function init() {
         w = canvas.width = window.innerWidth;
@@ -80,22 +79,47 @@
     window.addEventListener('resize', init);
     init();
 
-    function drawPetal(len, wid, ang, col, alp) {
-        ctx.save(); ctx.rotate(ang);
-        ctx.shadowBlur=15; ctx.shadowColor=col; ctx.strokeStyle=col; ctx.globalAlpha=alp; ctx.lineWidth=2;
-        ctx.beginPath(); ctx.moveTo(0,0);
-        ctx.bezierCurveTo(wid, len/3, wid, len*0.8, 0, len);
-        ctx.bezierCurveTo(-wid, len*0.8, -wid, len/3, 0,0);
-        ctx.stroke(); ctx.restore();
+    // 3. Послідовна активація
+    function go(from, to) {
+        document.getElementById('s'+from).classList.remove('active');
+        document.getElementById('s'+to).classList.add('active');
+
+        if (to === 2) { 
+            // Крок 2: Проявляємо фон та зірки
+            canvas.style.opacity = "0.5";
+            if(!isActive) { isActive = true; render(); }
+        }
+        if (to === 3) {
+            // Крок 3: Починаємо плавно вводити звук
+            canvas.style.opacity = "0.8";
+            startAmbientAudio();
+        }
     }
 
-    function animate() {
-        // Фон з градієнтом
+    function startAmbientAudio() {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = audioCtx.createGain();
+            masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            masterGain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 4);
+            masterGain.connect(audioCtx.destination);
+
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.value = freq / 2; // Глибокий суб-бас
+            osc.connect(masterGain);
+            osc.start();
+        } catch(e) { console.log("Audio prep blocked"); }
+    }
+
+    function render() {
+        // Радіальний фон
         const g = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w*0.8);
-        g.addColorStop(0, `hsla(${stl.h}, 80%, 7%, 1)`); g.addColorStop(1, "#000");
+        g.addColorStop(0, `hsla(${stl.h}, 85%, 8%, 1)`); 
+        g.addColorStop(1, "#000");
         ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
 
-        // Зірки
+        // Рух зірок
         ctx.fillStyle = "#fff";
         stars.forEach(s => {
             ctx.globalAlpha = 0.2 + Math.abs(Math.sin(t + s.x)) * 0.5;
@@ -103,51 +127,57 @@
             s.y -= s.sp; if(s.y < 0) s.y = h;
         });
 
-        // Квітка
-        ctx.save(); ctx.translate(w/2, h/2); ctx.rotate(t * 0.05);
-        for(let l=0; l<3; l++) {
-            const sc = 1 - l*0.25;
-            for(let i=0; i<petals; i++) {
-                const ang = (Math.PI*2/petals)*i;
-                const len = (160 + Math.sin(t*2+i+l)*20)*sc;
-                const wid = (50 + Math.cos(t*3+i)*10)*sc;
-                drawPetal(len, wid, ang, `hsla(${hue + l*15}, 100%, 75%, 1)`, 0.8-l*0.2);
+        // Малювання квітки лише після входу
+        if (document.getElementById('intro').style.display === 'none') {
+            ctx.save(); ctx.translate(w/2, h/2); ctx.rotate(t * 0.05);
+            for(let l=0; l<3; l++) {
+                const sc = 1 - l*0.25;
+                for(let i=0; i<petals; i++) {
+                    const ang = (Math.PI*2/petals)*i;
+                    const len = (165 + Math.sin(t*2+i+l)*25)*sc;
+                    const wid = (55 + Math.cos(t*3+i)*12)*sc;
+                    drawPetal(len, wid, ang, `hsla(${hue + l*15}, 100%, 75%, 1)`, 0.9-l*0.2);
+                }
             }
+            // Пульсуюче ядро
+            ctx.beginPath(); ctx.arc(0,0, 7+Math.sin(t*4)*2, 0, Math.PI*2);
+            ctx.fillStyle = "white"; ctx.shadowBlur = 30; ctx.shadowColor = "white"; ctx.fill();
+            ctx.restore();
         }
-        // Ядро
-        ctx.beginPath(); ctx.arc(0,0, 6+Math.sin(t*4)*2, 0, Math.PI*2);
-        ctx.fillStyle = "white"; ctx.shadowBlur = 30; ctx.shadowColor = "white"; ctx.fill();
-        ctx.restore();
 
         t += stl.s;
-        requestAnimationFrame(animate);
+        requestAnimationFrame(render);
     }
 
-    // Фінальний запуск
+    function drawPetal(len, wid, ang, col, alp) {
+        ctx.save(); ctx.rotate(ang);
+        ctx.shadowBlur=20; ctx.shadowColor=col; ctx.strokeStyle=col; ctx.globalAlpha=alp; ctx.lineWidth=2.5;
+        ctx.beginPath(); ctx.moveTo(0,0);
+        ctx.bezierCurveTo(wid, len/3, wid, len*0.8, 0, len);
+        ctx.bezierCurveTo(-wid, len*0.8, -wid, len/3, 0,0);
+        ctx.stroke(); ctx.restore();
+    }
+
+    // 4. Фінальний запуск
     document.getElementById('startBtn').onclick = function() {
-        document.getElementById('intro').style.transition = 'opacity 1.5s';
         document.getElementById('intro').style.opacity = '0';
         
+        // Посилюємо звук та додаємо гармоніку
+        if(masterGain) {
+            masterGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 2);
+            const highOsc = audioCtx.createOscillator();
+            highOsc.type = 'triangle';
+            highOsc.frequency.value = freq;
+            const highGain = audioCtx.createGain();
+            highGain.gain.value = 0.05;
+            highOsc.connect(highGain); highGain.connect(masterGain);
+            highOsc.start();
+        }
+
         setTimeout(() => {
             document.getElementById('intro').style.display = 'none';
             canvas.style.opacity = '1';
-            animate();
-        }, 1500);
-
-        try {
-            const ac = new (window.AudioContext || window.webkitAudioContext)();
-            const master = ac.createGain();
-            master.gain.setValueAtTime(0, ac.currentTime);
-            master.gain.linearRampToValueAtTime(0.15, ac.currentTime + 3);
-            master.connect(ac.destination);
-
-            const osc = (f, v, ty) => {
-                const o = ac.createOscillator(); const g = ac.createGain();
-                o.type = ty; o.frequency.value = f; g.gain.value = v;
-                o.connect(g); g.connect(master); o.start();
-            };
-            osc(freq, 0.5, 'triangle'); osc(freq*2, 0.2, 'sine');
-        } catch(e) {}
+        }, 1200);
     };
 </script>
 </body>
