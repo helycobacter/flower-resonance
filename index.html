@@ -3,63 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DeepTown: Multiverse Glitch</title>
+    <title>DeepTown: Personalized Ritual</title>
     <style>
-        body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; }
-        canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 4s ease-in-out; z-index: 1; pointer-events: none; }
-        #intro { position: relative; z-index: 10; text-align: center; width: 85%; transition: opacity 2s; }
-        .step { display: none; animation: fadeIn 0.5s forwards; }
+        body { margin: 0; overflow: hidden; height: 100vh; background: #000; color: #fff; font-family: 'Courier New', monospace; }
+        canvas { position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 4s; z-index: 1; pointer-events: none; }
+        #intro { position: absolute; z-index: 10; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; background: black; transition: 2s; }
+        .step { display: none; animation: fadeIn 0.5s forwards; width: 85%; }
         .active { display: block; }
         
-        h1 { font-weight: 200; letter-spacing: 5px; font-size: 16px; margin-bottom: 30px; }
+        h1 { font-weight: 200; letter-spacing: 5px; font-size: 16px; margin-bottom: 20px; text-transform: uppercase; }
+        #log { position: absolute; bottom: 20px; left: 20px; font-size: 9px; color: #0f0; text-align: left; pointer-events: none; opacity: 0.7; max-width: 250px; }
+        
         .theme-deep h1 { color: #0f0; text-shadow: 0 0 10px #0f0; }
-        .theme-neon h1 { color: #f0f; text-shadow: 0 0 15px #f0f; font-family: 'OCR A Std', monospace; }
+        .theme-neon h1 { color: #f0f; text-shadow: 0 0 15px #f0f; }
         .theme-zen h1 { color: #fa0; text-shadow: 0 0 15px #fa0; }
 
-        .controls { display: flex; flex-direction: column; gap: 12px; align-items: center; }
-        button { background: none; border: 1px solid currentColor; padding: 14px 30px; cursor: pointer; letter-spacing: 2px; font-size: 10px; text-transform: uppercase; color: inherit; transition: 0.1s; width: 220px; }
-        button:hover { background: rgba(255,255,255,0.1); box-shadow: 0 0 20px currentColor; }
+        button { background: none; border: 1px solid currentColor; padding: 12px 25px; cursor: pointer; letter-spacing: 2px; font-size: 10px; color: inherit; transition: 0.2s; margin: 5px; }
+        button:hover { background: rgba(255,255,255,0.15); box-shadow: 0 0 15px currentColor; }
         
-        #exitBtn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; opacity: 0; display: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 20px; font-size: 9px; background: none; transition: 3s; cursor: pointer; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        /* Глітч-ефект для всього контейнера */
-        .glitch-active { animation: glitch 0.2s infinite; filter: hue-rotate(90deg); }
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-3px, 2px); }
-            40% { transform: translate(3px, -2px); }
-            60% { transform: translate(-3px, -2px); }
-            80% { transform: translate(3px, 2px); }
-            100% { transform: translate(0); }
-        }
+        .glitch-text { animation: blink 0.1s infinite alternate; }
+        @keyframes blink { from { opacity: 0.7; } to { opacity: 1; } }
     </style>
 </head>
 <body class="theme-deep" id="bodyTag">
 
 <canvas id="canvas"></canvas>
-<button id="exitBtn" onclick="location.reload()">[ RECONNECT ]</button>
+<div id="log"></div>
 
 <div id="intro">
     <div id="s1" class="step active">
-        <h1>[ SELECT ARCHETYPE ]</h1>
+        <h1 id="userGreeting">WELCOME, ...</h1>
         <div class="controls">
-            <button onclick="setTheme('deep'); initAudioAndGo(1,2)">01. DEEP_RESONANCE</button>
-            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">02. NEON_GLITCH</button>
-            <button onclick="setTheme('zen'); initAudioAndGo(1,2)">03. ZEN_HARMONY</button>
+            <button onclick="setTheme('deep'); initAudioAndGo(1,2)">ARCHETYPE: DEEP</button>
+            <button onclick="setTheme('neon'); initAudioAndGo(1,2)">ARCHETYPE: NEON</button>
+            <button onclick="setTheme('zen'); initAudioAndGo(1,2)">ARCHETYPE: ZEN</button>
         </div>
     </div>
     <div id="s2" class="step">
         <h1 id="step2Title">[ DATA_STREAM_OPEN ]</h1>
-        <div class="controls"><button onclick="uiClick(); go(2,3)">SYNC</button></div>
+        <div class="controls"><button onclick="uiClick(); go(2,3)">SYNC SENSES</button></div>
     </div>
     <div id="s3" class="step">
-        <h1>[ READY_TO_OVERLOAD ]</h1>
-        <div class="controls"><button id="startBtn" onclick="finalSequence()">EXECUTE</button></div>
+        <h1>[ SYSTEM_READY ]</h1>
+        <div class="controls"><button onclick="finalSequence()">EXECUTE</button></div>
     </div>
 </div>
 
 <script>
+    // ПАРАМЕТРИ ПЕРСОНАЛІЗАЦІЇ
+    const p = new URLSearchParams(window.location.search);
+    const uName = p.get('name') || "DIVER";
+    const uHue = parseInt(p.get('hue')) || 280;
+    const uPetals = parseInt(p.get('petals')) || 8;
+    const uFreq = parseInt(p.get('freq')) || 432;
+
+    document.getElementById('userGreeting').innerText = `WELCOME, ${uName.toUpperCase()}`;
+
     let currentTheme = 'deep';
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
     let w, h, t = 0, audioCtx, masterGain, flowerAlpha = 0, growth = 0, isLaunched = false;
@@ -68,31 +68,35 @@
     function init() {
         w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
         objects.length = 0;
-        for (let i = 0; i < 500; i++) objects.push({ x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w });
+        for (let i = 0; i < 400; i++) objects.push({ x: Math.random()*w-w/2, y: Math.random()*h-h/2, z: Math.random()*w });
     }
     window.onresize = init; init();
+
+    function addLog(msg) {
+        const logDiv = document.getElementById('log');
+        const line = document.createElement('div');
+        line.innerText = `> ${msg}`;
+        logDiv.appendChild(line);
+        if (logDiv.childNodes.length > 8) logDiv.removeChild(logDiv.firstChild);
+    }
 
     function setTheme(t) {
         currentTheme = t;
         document.getElementById('bodyTag').className = 'theme-' + t;
+        document.getElementById('log').style.color = (t === 'neon' ? '#f0f' : (t === 'zen' ? '#fa0' : '#0f0'));
+        addLog(`ARCHETYPE_${t.toUpperCase()}_SELECTED`);
     }
 
-    // СИНТЕЗАТОР МОДЕМА
-    function playModemSound() {
-        if (!audioCtx) return;
+    function playModemHandshake() {
         const now = audioCtx.currentTime;
-        
-        // Хаотичні піски (Dial-up noise)
-        for (let i = 0; i < 15; i++) {
-            const o = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            o.type = i % 2 === 0 ? 'square' : 'sawtooth';
-            o.frequency.setValueAtTime(100 + Math.random() * 3000, now + i * 0.1);
-            g.gain.setValueAtTime(0.02, now + i * 0.1);
-            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.15);
+        [800, 1200, 900, 1500, 2000].forEach((f, i) => {
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = 'square'; o.frequency.setValueAtTime(f, now + i*0.1);
+            g.gain.setValueAtTime(0.03, now + i*0.1);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.1);
             o.connect(g); g.connect(audioCtx.destination);
-            o.start(now + i * 0.1); o.stop(now + i * 0.1 + 0.15);
-        }
+            o.start(now + i*0.1); o.stop(now + i*0.1 + 0.1);
+        });
     }
 
     function initAudioAndGo(from, to) {
@@ -102,116 +106,90 @@
             masterGain.connect(audioCtx.destination);
             masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
         }
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        if (currentTheme === 'neon') playModemSound();
-        uiClick(); go(from, to);
+        if (currentTheme === 'neon') playModemHandshake();
+        go(from, to);
     }
 
     function uiClick() {
+        if (!audioCtx) return;
         const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-        o.type = 'square';
-        o.frequency.value = currentTheme === 'neon' ? 1200 : 440;
-        g.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        o.type = 'sine'; o.frequency.value = uFreq;
+        g.gain.setValueAtTime(0.05, audioCtx.currentTime);
         g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
         o.connect(g); g.connect(audioCtx.destination);
         o.start(); o.stop(audioCtx.currentTime + 0.1);
     }
 
-    function startAmbient() {
-        const osc = audioCtx.createOscillator();
-        osc.type = currentTheme === 'neon' ? 'sawtooth' : 'triangle';
-        osc.frequency.value = currentTheme === 'neon' ? 60 : 108;
-        osc.connect(masterGain);
-        masterGain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 4);
-        osc.start();
-    }
-
     function go(from, to) {
         document.getElementById('s'+from).classList.remove('active');
         document.getElementById('s'+to).classList.add('active');
+        addLog(`PHASE_0${to}_INITIALIZED`);
         if(to === 2) { 
-            canvas.style.opacity = "0.6"; 
-            startAmbient(); 
+            canvas.style.opacity = "0.4"; 
+            const osc = audioCtx.createOscillator();
+            osc.type = (currentTheme === 'neon' ? 'sawtooth' : 'triangle');
+            osc.frequency.value = uFreq / 4;
+            osc.connect(masterGain);
+            masterGain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 5);
+            osc.start();
             render(); 
         }
     }
 
     function finalSequence() {
-        if (currentTheme === 'neon') {
-            document.body.classList.add('glitch-active');
-            playModemSound();
-            setTimeout(() => document.body.classList.remove('glitch-active'), 1500);
-        }
-        uiClick(); isLaunched = true;
+        addLog("DECRYPTING_REALITY...");
+        isLaunched = true;
         document.getElementById('intro').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('intro').style.display = 'none';
-            canvas.style.opacity = "1";
-            document.getElementById('exitBtn').style.display = 'block';
-            setTimeout(() => document.getElementById('exitBtn').style.opacity = '0.4', 4000);
-        }, 2500);
+        setTimeout(() => { document.getElementById('intro').style.display = 'none'; canvas.style.opacity = "1"; }, 2000);
+    }
+
+    function drawPetal(len, wid, ang, col, alp) {
+        ctx.save(); ctx.rotate(ang);
+        ctx.strokeStyle = col; ctx.globalAlpha = alp * flowerAlpha;
+        ctx.lineWidth = 1.5; ctx.shadowBlur = 10 * growth; ctx.shadowColor = col;
+        ctx.beginPath(); ctx.moveTo(0,0);
+        ctx.bezierCurveTo(wid*growth, len/3*growth, wid*growth, len*0.8*growth, 0, len*growth);
+        ctx.bezierCurveTo(-wid*growth, len*0.8*growth, -wid*growth, len/3*growth, 0,0);
+        ctx.stroke(); ctx.restore();
     }
 
     function render() {
-        let bgAlpha = currentTheme === 'neon' ? 0.5 : 0.2;
-        ctx.fillStyle = `rgba(0,0,0,${bgAlpha})`;
+        ctx.fillStyle = `rgba(0,0,0,${currentTheme === 'neon' ? 0.3 : 0.15})`;
         ctx.fillRect(0, 0, w, h);
 
-        const speed = currentTheme === 'neon' ? 25 : (currentTheme === 'zen' ? 0.4 : 1);
-        
+        const speed = currentTheme === 'neon' ? 20 : (currentTheme === 'zen' ? 0.5 : 1);
         objects.forEach(s => {
             s.z -= speed; if (s.z <= 0) s.z = w;
             const px = (s.x / s.z) * w + w / 2, py = (s.y / s.z) * h + h / 2;
-            const size = (1 - s.z/w) * 3;
-            
-            ctx.fillStyle = currentTheme === 'deep' ? '#0f0' : (currentTheme === 'neon' ? '#0ff' : '#fa0');
-            ctx.globalAlpha = (1 - s.z / w);
-            
-            if(currentTheme === 'neon' && Math.random() > 0.98) ctx.fillStyle = "#f0f"; // Глітч кольору частинок
-
+            ctx.fillStyle = currentTheme === 'neon' ? '#f0f' : (currentTheme === 'zen' ? '#fa0' : '#0f0');
+            ctx.globalAlpha = (1 - s.z/w);
             ctx.beginPath();
-            if(currentTheme === 'zen') {
-                ctx.arc(px, py, size * 15 * (1-s.z/w), 0, Math.PI*2);
-                ctx.strokeStyle = ctx.fillStyle; ctx.stroke();
-            } else if(currentTheme === 'neon') {
-                ctx.rect(px, py, size*8, 1); ctx.fill();
-            } else {
-                ctx.arc(px, py, size, 0, Math.PI*2); ctx.fill();
-            }
+            if(currentTheme === 'neon') ctx.rect(px, py, (1-s.z/w)*15, 1);
+            else ctx.arc(px, py, (1-s.z/w)*2, 0, Math.PI*2);
+            ctx.fill();
         });
 
         if(isLaunched) {
-            if(flowerAlpha < 1) flowerAlpha += 0.003;
-            growth = 0.6 + Math.sin(t * (currentTheme === 'neon' ? 3 : 0.5)) * 0.4;
+            if(flowerAlpha < 1) flowerAlpha += 0.005;
+            growth = 0.6 + Math.sin(t * (currentTheme === 'neon' ? 2 : 0.6)) * 0.4;
             
-            ctx.save();
-            ctx.translate(w/2, h/2);
-            if(currentTheme === 'neon') ctx.translate(Math.random()*4-2, Math.random()*4-2); // Тремтіння об'єкта
-
-            ctx.rotate(t * (currentTheme === 'neon' ? 0.8 : 0.1));
-
-            const parts = currentTheme === 'neon' ? 16 : (currentTheme === 'zen' ? 6 : 8);
-            for(let i=0; i<parts; i++) {
-                ctx.rotate((Math.PI*2)/parts);
-                ctx.globalAlpha = flowerAlpha * 0.5;
-                ctx.strokeStyle = currentTheme === 'deep' ? '#0f0' : (currentTheme === 'neon' ? '#f0f' : '#fa0');
-                
-                ctx.beginPath();
-                if(currentTheme === 'neon') {
-                    ctx.moveTo(0, 20); ctx.lineTo(0, 150 * growth);
-                    if(Math.random() > 0.9) ctx.lineTo(20, 150 * growth); // Глітч форми
-                } else if(currentTheme === 'zen') {
-                    ctx.arc(0, 100*growth, 15, 0, Math.PI*2);
-                } else {
-                    ctx.bezierCurveTo(40*growth, 40*growth, 40*growth, 100*growth, 0, 150*growth);
+            ctx.save(); ctx.translate(w/2, h/2);
+            ctx.rotate(t * (currentTheme === 'neon' ? 0.5 : 0.1));
+            
+            // ПОВЕРНЕННЯ СКЛАДНОСТІ (3 ШАРИ ПЕЛЮСТОК)
+            for(let l=0; l<3; l++) {
+                const sc = 1 - l*0.25;
+                for(let i=0; i<uPetals; i++) {
+                    const ang = (Math.PI*2/uPetals)*i;
+                    const lBase = (currentTheme === 'neon' ? 100 : 150);
+                    const col = `hsla(${uHue + l*20}, 80%, ${currentTheme === 'zen' ? '70%' : '60%'}, 1)`;
+                    drawPetal(lBase*sc, 45*sc, ang, col, 0.5 - l*0.1);
                 }
-                ctx.stroke();
             }
             ctx.restore();
+            if(currentTheme === 'neon' && Math.random() > 0.95) addLog("ERR_PACKET_LOSS_" + Math.floor(Math.random()*999));
         }
-        
-        t += 0.015;
-        requestAnimationFrame(render);
+        t += 0.015; requestAnimationFrame(render);
     }
 </script>
 </body>
