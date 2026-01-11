@@ -1,75 +1,65 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Resonance Matrix Master</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { 
-            margin: 0; overflow: hidden; height: 100vh; background: #000; 
-            color: #fff; font-family: 'Segoe UI', Roboto, sans-serif;
-            display: flex; align-items: center; justify-content: center;
-        }
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0; transition: opacity 3s; pointer-events: none; }
-        
-        #intro { position: relative; z-index: 10; max-width: 85%; text-align: center; transition: opacity 1.5s; }
-        h1 { font-weight: 200; letter-spacing: 8px; margin-bottom: 30px; }
-        .name-highlight { color: #fff; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
-
-        #progressContainer { width: 200px; height: 2px; background: rgba(255,255,255,0.1); margin: 20px auto; border-radius: 2px; overflow: hidden; }
-        #progressBar { width: 33.3%; height: 100%; background: #fff; transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        .step { display: none; opacity: 0; transform: translateY(10px); transition: 0.8s; min-height: 140px; }
-        .step.active { display: block; opacity: 1; transform: translateY(0); }
-        .step p { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 15px; color: #fff; font-weight: 400; }
-        .step span { font-size: 13px; color: rgba(255,255,255,0.5); display: block; max-width: 320px; margin: 0 auto; line-height: 1.7; }
-
-        .controls { margin-top: 40px; height: 60px; }
-        button { 
-            background: none; border: 1px solid rgba(255,255,255,0.4); color: #fff; 
-            padding: 16px 45px; border-radius: 50px; cursor: pointer; letter-spacing: 3px; 
-            font-size: 11px; transition: 0.4s; outline: none; pointer-events: auto;
-        }
-        button:hover:not(:disabled) { border-color: #fff; background: rgba(255,255,255,0.1); box-shadow: 0 0 20px rgba(255,255,255,0.1); }
-        button:disabled { opacity: 0.3; cursor: default; }
-        #startBtn { display: none; border-color: #fff; }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
+        .step { display: none; padding: 20px; }
+        .active { display: block; }
+        button { padding: 15px 30px; margin-top: 20px; cursor: pointer; background: #fff; border: none; border-radius: 20px; font-weight: bold; }
+        canvas { position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; transition: 2s; }
     </style>
 </head>
 <body>
 
     <div id="intro">
-        <h1 id="mainTitle">RESONANCE</h1>
-        <div id="progressContainer"><div id="progressBar"></div></div>
-        
-        <div id="stepContainer">
-            <div class="step active" id="step1">
-                <p>1. ГЕОМЕТРИЧНА МАТРИЦЯ</p>
-                <span>Ваше ім'я перетворено на цифровий код за системою Піфагора. Кількість пелюсток — це ваш вібраційний контур.</span>
-            </div>
-            <div class="step" id="step2">
-                <p>2. СПЕКТРАЛЬНИЙ АНАЛІЗ</p>
-                <span>Дата народження визначила домінуючу довжину хвилі. Колір квітки — це візуалізація вашої стихії в момент появи.</span>
-            </div>
-            <div class="step" id="step3">
-                <p>3. АКУСТИЧНИЙ РЕЗОНАНС</p>
-                <span>Згенеровано акорд на базі частоти 432Гц та вашого числа сили. Дозвольте звуку синхронізувати ваші біоритми.</span>
-            </div>
-        </div>
-
-        <div class="controls">
-            <button id="nextBtn">ДАЛІ</button>
-            <button id="startBtn">АКТИВАЦІЯ...</button>
-        </div>
+        <div id="s1" class="step active"><h1>КРОК 1</h1><p>Математика імені...</p><button onclick="next(1)">ДАЛІ</button></div>
+        <div id="s2" class="step"><h1>КРОК 2</h1><p>Спектр дати...</p><button onclick="next(2)">ДАЛІ</button></div>
+        <div id="s3" class="step"><h1>КРОК 3</h1><p>Готовність...</p><button id="startBtn">ЗАПУСТИТИ</button></div>
     </div>
-    
+
     <canvas id="canvas"></canvas>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const name = params.get('name') || "МАНДРІВНИК";
-        const hue = parseInt(params.get('hue')) || 280;
-        const petals = parseInt(params.get('petals')) || 8;
-        const freq = parseInt(params.get('freq')) || 432;
-        const element = (params.get('element') || "water").toLowerCase();
+        // Проста логіка перемикання
+        function next(num) {
+            document.getElementById('s'+num).classList.remove('active');
+            document.getElementById('s'+(num+1)).classList.add('active');
+        }
 
-        document.getElementById('mainTitle').innerHTML = `RESONANCE: <span class="name-highlight
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+
+        // Запуск фіналу
+        startBtn.addEventListener('click', function() {
+            document.getElementById('intro').style.display = 'none';
+            canvas.style.opacity = '1';
+            
+            // Запуск анімації
+            setInterval(() => {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0,0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(canvas.width/2, canvas.height/2, 50 + Math.sin(Date.now()*0.005)*20, 0, Math.PI*2);
+                ctx.fill();
+            }, 16);
+
+            // Запуск звуку
+            try {
+                const ac = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ac.createOscillator();
+                osc.connect(ac.destination);
+                osc.start();
+                setTimeout(() => osc.stop(), 2000);
+            } catch(e) { console.log(e); }
+        });
+
+        // Ресайз
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        window.onresize();
+    </script>
+</body>
+</html>
